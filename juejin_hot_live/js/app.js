@@ -319,7 +319,7 @@ function showLoading(isLoading) {
         loadingEl.innerHTML = `
             <div class="spinner-container">
                 <div class="spinner"></div>
-                <div class="spinner-text">加载中...</div>
+                <div class="spinner-text" data-text="✨ 加载中，请稍候... ✨">✨ 加载中，请稍候... ✨</div>
             </div>
         `;
         loadingEl.style.display = 'flex';
@@ -327,6 +327,43 @@ function showLoading(isLoading) {
     } else {
         loadingEl.style.display = 'none';
         articleListEl.style.display = 'grid';
+    }
+}
+
+/**
+ * 蔡徐坤篮球舞动画状态变量
+ */
+let ikunAnimationInterval;
+let isDanceState1 = true;
+
+/**
+ * 启动蔡徐坤篮球舞动画
+ */
+function startIkunAnimation() {
+    // 初始状态为动作1
+    const ikunScene = document.getElementById('ikun-scene');
+    ikunScene.classList.add('dance-state-1');
+    
+    // 设置动画间隔，每1.5秒切换一次动作
+    ikunAnimationInterval = setInterval(() => {
+        // 切换状态
+        isDanceState1 = !isDanceState1;
+        
+        // 移除所有状态类
+        ikunScene.classList.remove('dance-state-1', 'dance-state-2');
+        
+        // 添加当前状态类
+        ikunScene.classList.add(isDanceState1 ? 'dance-state-1' : 'dance-state-2');
+    }, 1500);
+}
+
+/**
+ * 停止蔡徐坤篮球舞动画
+ */
+function stopIkunAnimation() {
+    if (ikunAnimationInterval) {
+        clearInterval(ikunAnimationInterval);
+        ikunAnimationInterval = null;
     }
 }
 

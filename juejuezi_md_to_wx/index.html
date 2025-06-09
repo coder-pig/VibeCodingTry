@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掘掘子Markdown微信公众号排版工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar">
+            <h1>📝 掘掘子Markdown微信公众号排版工具</h1>
+            <div class="toolbar-controls">
+                <select id="themeSelect" class="theme-select">
+                    <option value="wechat">微信公众号</option>
+                    <option value="juejin">掘金风格</option>
+                    <option value="zhihu">知乎风格</option>
+                    <option value="github">GitHub风格</option>
+                    <option value="doocs-classic">Doocs经典</option>
+                    <option value="doocs-elegant">Doocs优雅</option>
+                    <option value="doocs-simple">Doocs简洁</option>
+                    <option value="doocs-modern">Doocs现代</option>
+                    <option value="mac-style">🍎 MAC风格窗口</option>
+                </select>
+                <button id="copyBtn" class="copy-btn">📋 复制带样式HTML</button>
+                <button id="clearBtn" class="clear-btn">🗑️ 清空</button>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧编辑器 -->
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h3>📝 Markdown编辑器</h3>
+                    <div class="editor-controls">
+                        <button id="insertTemplate" class="template-btn">📄 插入模板</button>
+                    </div>
+                </div>
+                <textarea id="markdownInput" placeholder="在这里输入Markdown内容...\n\n# 标题示例\n\n这是一个**粗体**文本和*斜体*文本的示例。\n\n## 二级标题\n\n- 列表项1\n- 列表项2\n- 列表项3\n\n```javascript\nconsole.log('Hello World!');\n```\n\n> 这是一个引用块\n\n[链接示例](https://example.com)"></textarea>
+            </div>
+
+            <!-- 右侧预览 -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h3>👀 预览效果</h3>
+                    <div class="preview-controls">
+                        <button id="fullscreenBtn" class="fullscreen-btn">🔍 全屏预览</button>
+                    </div>
+                </div>
+                <div id="preview" class="preview-content wechat-theme"></div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span id="wordCount">字数: 0</span>
+            <span id="charCount">字符: 0</span>
+            <span class="status-info">💡 提示: 支持实时预览，复制带样式HTML后可直接粘贴到微信公众号编辑器</span>
+        </div>
+    </div>
+
+    <!-- 全屏预览模态框 -->
+    <div id="fullscreenModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>全屏预览</h3>
+                <button id="closeModal" class="close-btn">✕</button>
+            </div>
+            <div id="fullscreenPreview" class="fullscreen-preview"></div>
+        </div>
+    </div>
+
+    <!-- 复制成功提示 -->
+    <div id="copyToast" class="toast">📋 带样式HTML复制成功！可以直接粘贴到微信公众号了</div>
+
+    <script src="script.js"></script>
+</body>
+</html>

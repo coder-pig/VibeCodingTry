@@ -348,8 +348,6 @@ header h1:hover::after {
     position: relative;
 }
 
-/* 移除了渐变遮罩和滚动条样式，因为现在使用flex换行 */
-
 #category-list {
     display: flex;
     flex-wrap: wrap;
@@ -585,7 +583,7 @@ header h1:hover::after {
     font-size: 12px;
     color: var(--stats-color);
     margin-top: auto;
-    padding-top: 10px; /* 减少上边距 */
+    padding-top: 10px;
     border-top: 1px dashed var(--border-color);
     position: relative;
     z-index: 2;
@@ -593,8 +591,8 @@ header h1:hover::after {
 
 .article-stats {
     display: flex;
-    width: 100%; /* 占满整行 */
-    justify-content: space-between; /* 四等分 */
+    width: 100%;
+    justify-content: space-between;
 }
 
 .stat-item {
@@ -619,13 +617,15 @@ header h1:hover::after {
     transform: scale(1.2);
 }
 
-/* 加载动画 */
+/* 超酷炫加载动画 */
 .loading {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 40px 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .spinner-container {
@@ -637,55 +637,173 @@ header h1:hover::after {
     position: relative;
 }
 
+/* 主旋转器 - 多层嵌套设计 */
 .spinner {
     display: inline-block;
-    width: 60px;
-    height: 60px;
-    border: 4px solid var(--spinner-border-color);
-    border-radius: 50%;
-    border-top-color: var(--spinner-color);
-    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    width: 80px;
+    height: 80px;
     position: relative;
-    box-shadow: 0 0 15px rgba(30, 128, 255, 0.2);
+    animation: spinPulse 2s ease-in-out infinite;
 }
 
-.spinner::before, .spinner::after {
+/* 外层光环 */
+.spinner::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.spinner::before {
-    width: 70%;
-    height: 70%;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
     border: 3px solid transparent;
-    border-bottom-color: var(--highlight-color);
-    animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, 
+        var(--highlight-color), 
+        #ff6b6b, 
+        #4ecdc4, 
+        #45b7d1, 
+        var(--highlight-color));
+    animation: spinOuter 3s linear infinite;
+    filter: blur(2px);
+    opacity: 0.8;
 }
 
+/* 中层旋转环 */
 .spinner::after {
-    width: 40%;
-    height: 40%;
-    border: 2px solid transparent;
-    border-left-color: var(--highlight-color);
-    animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 4px solid transparent;
+    border-radius: 50%;
+    background: conic-gradient(from 180deg, 
+        transparent, 
+        var(--highlight-color), 
+        transparent);
+    animation: spinMiddle 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    box-shadow: 
+        0 0 20px rgba(30, 128, 255, 0.5),
+        inset 0 0 20px rgba(30, 128, 255, 0.2);
 }
 
+/* 内核粒子效果 */
+.spinner {
+    background: radial-gradient(circle, 
+        var(--highlight-color) 0%, 
+        transparent 70%);
+    border-radius: 50%;
+    position: relative;
+}
+
+/* 粒子动画容器 */
+.spinner-container::before,
+.spinner-container::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--highlight-color);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--highlight-color);
+}
+
+.spinner-container::before {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: particleOrbit1 2s linear infinite;
+}
+
+.spinner-container::after {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: particleOrbit2 2s linear infinite reverse;
+}
+
+/* 炫酷文字效果 */
 .spinner-text {
-    margin-top: 20px;
-    font-size: 16px;
-    color: var(--highlight-color);
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    animation: pulse 1.5s infinite;
-    text-shadow: var(--highlight-glow);
+    margin-top: 30px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    background: linear-gradient(45deg, 
+        var(--highlight-color), 
+        #ff6b6b, 
+        #4ecdc4, 
+        var(--highlight-color));
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textGradient 3s ease-in-out infinite, textFloat 2s ease-in-out infinite;
+    text-shadow: 0 0 30px rgba(30, 128, 255, 0.5);
+    position: relative;
+}
+
+/* 文字光晕效果 */
+.spinner-text::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--highlight-color);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: blur(10px);
+    opacity: 0.7;
+    animation: textGlow 2s ease-in-out infinite;
+}
+
+/* 动画关键帧定义 */
+@keyframes spinOuter {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes spinMiddle {
+    0% { transform: rotate(0deg); opacity: 1; }
+    50% { transform: rotate(-180deg); opacity: 0.7; }
+    100% { transform: rotate(-360deg); opacity: 1; }
+}
+
+@keyframes spinPulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.05); filter: brightness(1.2); }
+}
+
+@keyframes particleOrbit1 {
+    0% { transform: translateX(-50%) rotate(0deg) translateX(50px) rotate(0deg); }
+    100% { transform: translateX(-50%) rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
+@keyframes particleOrbit2 {
+    0% { transform: translateX(-50%) rotate(0deg) translateX(60px) rotate(0deg); }
+    100% { transform: translateX(-50%) rotate(360deg) translateX(60px) rotate(-360deg); }
+}
+
+@keyframes textGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes textFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+@keyframes textGlow {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
 }
 
 @keyframes spin {
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* 错误和空状态样式 */
@@ -825,21 +943,19 @@ header h1:hover::after {
     .article-desc {
         font-size: 13px;
         margin-bottom: 15px;
-        -webkit-line-clamp: 2;
     }
     
     .article-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-6px) rotateX(2deg) rotateY(-2deg);
     }
     
     .article-card:nth-child(even):hover {
-        transform: translateY(-5px);
+        transform: translateY(-6px) rotateX(2deg) rotateY(2deg);
     }
     
     .spinner {
         width: 40px;
         height: 40px;
-        border-width: 3px;
     }
     
     .spinner::before {
@@ -847,7 +963,7 @@ header h1:hover::after {
     }
     
     .spinner::after {
-        border-width: 1px;
+        border-width: 2px;
     }
     
     .spinner-text {
@@ -856,13 +972,150 @@ header h1:hover::after {
     }
     
     .error-message, .empty-message {
+        width: 95%;
         padding: 20px;
-        font-size: 15px;
-        margin: 20px auto;
+        font-size: 16px;
+        left: 2.5%;
     }
     
     .error-message::before, .empty-message::before {
-        font-size: 28px;
+        font-size: 24px;
         margin-bottom: 10px;
     }
+}
+
+/* 加载动画优化 */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 蔡徐坤加载动画 */
+.ikun-scene {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 20px auto;
+    perspective: 1000px;
+}
+
+.ikun {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 80px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M35,15 Q50,0 65,15 L65,25 L35,25 Z" fill="%23888888"/><path d="M50,0 L50,25" stroke="%23666666" stroke-width="1"/><ellipse cx="50" cy="20" rx="15" ry="17" fill="%23FFDBAC"/><rect x="35" y="30" width="30" height="25" fill="%23000000"/><rect x="33" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="65" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="38" y="55" width="24" height="30" fill="%23888888"/><rect x="40" y="30" width="3" height="55" fill="%23000000"/><rect x="57" y="30" width="3" height="55" fill="%23000000"/><rect x="28" y="35" width="7" height="20" fill="%23000000" rx="3" ry="3" transform="rotate(-30,28,35)"/><rect x="65" y="35" width="7" height="25" fill="%23000000" rx="3" ry="3" transform="rotate(20,65,35)"/><rect x="38" y="85" width="10" height="5" fill="%23000000"/><rect x="52" y="85" width="10" height="5" fill="%23000000"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 2;
+}
+
+.basketball {
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 30% 30%, #ff8c42, #d2691e);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.basketball::before, .basketball::after {
+    content: '';
+    position: absolute;
+    background: #8b4513;
+}
+
+.basketball::before {
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+
+.basketball::after {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: translateY(-50%);
+}
+
+.floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(to right, #8b4513, #a0522d, #8b4513);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.spotlight {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(10px);
+    animation: pulse 2s infinite;
+}
+
+/* 蔡徐坤动画关键帧 */
+@keyframes ikun-dance-1 {
+    0%, 100% { transform: translate(-50%, -50%) rotateY(0deg); }
+    25% { transform: translate(-50%, -50%) rotateY(-15deg) translateY(-5px); }
+    50% { transform: translate(-50%, -50%) rotateY(0deg) translateY(-10px); }
+    75% { transform: translate(-50%, -50%) rotateY(15deg) translateY(-5px); }
+}
+
+@keyframes ikun-dance-2 {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+    50% { transform: translate(-50%, -50%) translateY(-15px); }
+}
+
+@keyframes basketball-bounce-1 {
+    0%, 100% { transform: translateY(0px) rotateZ(0deg); }
+    25% { transform: translateY(-10px) rotateZ(90deg); }
+    50% { transform: translateY(-20px) rotateZ(180deg); }
+    75% { transform: translateY(-10px) rotateZ(270deg); }
+}
+
+@keyframes basketball-bounce-2 {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-25px) scale(0.8); }
+}
+
+/* 蔡徐坤动作状态1 - 左右摇摆 */
+.dance-state-1 .ikun {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M35,15 Q50,0 65,15 L65,25 L35,25 Z" fill="%23888888"/><path d="M50,0 L50,25" stroke="%23666666" stroke-width="1"/><ellipse cx="50" cy="20" rx="15" ry="17" fill="%23FFDBAC"/><rect x="35" y="30" width="30" height="25" fill="%23000000"/><rect x="33" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="65" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="38" y="55" width="24" height="30" fill="%23888888"/><rect x="40" y="30" width="3" height="55" fill="%23000000"/><rect x="57" y="30" width="3" height="55" fill="%23000000"/><rect x="28" y="35" width="7" height="20" fill="%23000000" rx="3" ry="3" transform="rotate(-30,28,35)"/><rect x="65" y="35" width="7" height="25" fill="%23000000" rx="3" ry="3" transform="rotate(20,65,35)"/><rect x="38" y="85" width="10" height="5" fill="%23000000"/><rect x="52" y="85" width="10" height="5" fill="%23000000"/></svg>');
+    animation: ikun-dance-1 1s infinite;
+}
+
+.dance-state-1 .basketball {
+    animation: basketball-bounce-1 1s infinite;
+}
+
+/* 蔡徐坤动作状态2 - 上下跳跃 */
+.dance-state-2 .ikun {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M35,15 Q50,0 65,15 L65,25 L35,25 Z" fill="%23888888"/><path d="M50,0 L50,25" stroke="%23666666" stroke-width="1"/><ellipse cx="50" cy="20" rx="15" ry="17" fill="%23FFDBAC"/><rect x="35" y="30" width="30" height="25" fill="%23000000"/><rect x="33" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="65" y="30" width="2" height="25" fill="%23FFFFFF"/><rect x="38" y="55" width="24" height="30" fill="%23888888"/><rect x="40" y="30" width="3" height="55" fill="%23000000"/><rect x="57" y="30" width="3" height="55" fill="%23000000"/><rect x="25" y="40" width="7" height="20" fill="%23000000" rx="3" ry="3" transform="rotate(-45,25,40)"/><rect x="68" y="40" width="7" height="20" fill="%23000000" rx="3" ry="3" transform="rotate(45,68,40)"/><rect x="38" y="85" width="10" height="5" fill="%23000000" transform="rotate(-15,38,85)"/><rect x="52" y="85" width="10" height="5" fill="%23000000" transform="rotate(15,52,85)"/></svg>');
+    animation: ikun-dance-2 0.5s infinite;
+}
+
+.dance-state-2 .basketball {
+    animation: basketball-bounce-2 0.5s infinite;
 }
