@@ -68,7 +68,7 @@ class MarkdownConverter {
             
             // 在AI主题下使用url.html的样式
             if (theme === 'ai') {
-                return `<ul class="list-paddingleft-1">
+                return `<br><ul class="list-paddingleft-1">
     <li style="box-sizing: border-box;">
         <p style="text-align: left;box-sizing: border-box;"><span
                 style="font-size: 12px;color: rgb(51, 105, 232);box-sizing: border-box;font-weight: bold;">${text}<br
