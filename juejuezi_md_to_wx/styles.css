@@ -56,6 +56,11 @@ body {
     z-index: 10; /* 设置与工具栏相同的z-index */
 }
 
+.status-info {
+    color: #999;
+    font-style: italic;
+}
+
 .toolbar h1 {
     font-size: 24px;
     color: #2c3e50;
@@ -410,6 +415,19 @@ body {
     color: inherit !important;
 }
 
+.wechat-theme a {
+    color: #3498db;
+    text-decoration: none;
+    border-bottom: 1px solid #3498db;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+}
+
+.wechat-theme a:hover {
+    color: #2980b9;
+    border-bottom-color: #2980b9;
+}
+
 /* Mac风格代码块 */
 .mac-style-code-block {
     margin: 15px 0;
@@ -467,45 +485,6 @@ body {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
     font-size: 14px !important;
     line-height: 1.5 !important;
-}
-
-.wechat-theme a {
-    color: #3498db;
-    text-decoration: none;
-    border-bottom: 1px solid #3498db;
-    font-size: 15px;
-    letter-spacing: 0.5px;
-}
-
-.wechat-theme a:hover {
-    color: #2980b9;
-    border-bottom-color: #2980b9;
-}
-
-
-
-
-
-
-
-/* 状态栏 */
-.status-bar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 10px 20px;
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #666;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.status-info {
-    color: #999;
-    font-style: italic;
 }
 
 /* 模态框样式 */
@@ -635,4 +614,196 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* AI文章主题样式 */
+.ai-theme {
+    font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    line-height: 1.75;
+    color: #333;
+    letter-spacing: 1px;
+    padding: 0 1.0em;
+    text-align: justify;
+    background-color: #ffffff;
+}
+
+/* AI主题 h1 样式 */
+.ai-theme h1 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 22px 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #5a78ea;
+    letter-spacing: 1px;
+    line-height: 1.75;
+    text-align: center;
+}
+
+/* AI主题 h2 样式 - 基于h2.html */
+.ai-theme h2 {
+    position: relative;
+    font-size: 20px;
+    font-weight: bold;
+    color: #5a78ea;
+    margin: 20px 0 15px 0;
+    padding: 10px 0;
+    letter-spacing: 1px;
+    line-height: 1.75;
+    text-align: center;
+}
+
+.ai-theme h2::before {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 29px;
+    height: 29px;
+    margin-right: 5px;
+    background-image: url("https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506101514132.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.ai-theme h2::after {
+    content: "";
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: 2px;
+    background-color: #5a78ea;
+    margin: 5px auto 0;
+}
+
+/* AI主题 h3 样式 - 基于h3.html */
+.ai-theme h3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #5a78ea;
+    margin: 16px 0 10px 0;
+    letter-spacing: 0.544px;
+    line-height: 1.75;
+    text-align: center;
+    position: relative;
+}
+
+.ai-theme h3::before {
+    content: "//";
+    margin-right: 8px;
+}
+
+.ai-theme h3::after {
+    content: "//";
+    margin-left: 8px;
+}
+
+/* AI主题其他元素样式 */
+.ai-theme p {
+    margin: 12px 0;
+    text-align: justify;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1px;
+}
+
+.ai-theme strong {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.ai-theme em {
+    color: #8e44ad;
+    font-style: italic;
+}
+
+.ai-theme blockquote {
+    margin: 15px 0;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-left: 4px solid #5a78ea;
+    border-radius: 0 8px 8px 0;
+    color: #555;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+}
+
+.ai-theme ul, .ai-theme ol {
+    margin: 12px 0;
+    padding-left: 25px;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1px;
+}
+
+.ai-theme li {
+    margin: 5px 0;
+    font-size: 15px;
+    line-height: 1.2;
+    letter-spacing: 1px;
+}
+
+.ai-theme code {
+    background: #f1f2f6;
+    color: #e74c3c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+}
+
+/* AI主题使用Mac风格代码块 */
+.ai-theme pre {
+    /* 移除默认样式，由Mac风格代码块提供样式 */
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 15px 0;
+    overflow: visible;
+    position: relative;
+}
+
+.ai-theme pre code {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-family: inherit !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 确保AI主题中的Mac风格代码块正确显示 */
+.ai-theme .mac-style-code-block {
+    margin: 15px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.ai-theme a {
+    color: #5a78ea;
+    text-decoration: none;
+    border-bottom: 1px solid #5a78ea;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.ai-theme a:hover {
+    color: #4a68da;
+    border-bottom-color: #4a68da;
+}
+
+/* 确保hljs样式不被覆盖 */
+.ai-theme pre code.hljs {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.ai-theme .hljs {
+    background: transparent !important;
+    color: inherit !important;
 }

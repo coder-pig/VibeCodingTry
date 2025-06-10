@@ -62,8 +62,24 @@ class MarkdownConverter {
         const renderer = new marked.Renderer();
         
         // 自定义链接渲染，添加微信公众号友好的样式
-        renderer.link = function(href, title, text) {
+        renderer.link = (href, title, text) => {
             const titleAttr = title ? ` title="${title}"` : '';
+            const theme = this.themeSelect ? this.themeSelect.value : 'wechat';
+            
+            // 在AI主题下使用url.html的样式
+            if (theme === 'ai') {
+                return `<ul class="list-paddingleft-1">
+    <li style="box-sizing: border-box;">
+        <p style="text-align: left;box-sizing: border-box;"><span
+                style="font-size: 12px;color: rgb(51, 105, 232);box-sizing: border-box;font-weight: bold;">${text}<br
+                    style="box-sizing: border-box;"></span><span
+                style="font-size: 12px;color: rgba(74, 71, 71, 0.59);box-sizing: border-box;">${href}</span>
+        </p>
+    </li>
+</ul>`;
+            }
+            
+            // 默认样式
             return `<a href="${href}"${titleAttr} target="_blank" rel="noopener">${text}</a>`;
         };
 
@@ -278,6 +294,9 @@ ${content}</tr>
             const codeElement = pre.querySelector('code');
             if (!codeElement) return;
             
+            // 如果已经是Mac风格代码块的子元素，则跳过
+            if (pre.parentNode.classList.contains('mac-style-code-block')) return;
+            
             // 获取代码内容和语言
             const codeText = codeElement.textContent;
             let language = 'html';
@@ -305,6 +324,44 @@ ${content}</tr>
             // 替换原来的pre元素
             pre.parentNode.replaceChild(macStyleBlock, pre);
         });
+        
+        // 确保AI主题中的代码块也应用Mac风格
+        const aiTheme = document.querySelector('.ai-theme');
+        if (aiTheme) {
+            const aiCodeBlocks = aiTheme.querySelectorAll('pre');
+            aiCodeBlocks.forEach(pre => {
+                if (pre.parentNode.classList.contains('mac-style-code-block')) return;
+                
+                const codeElement = pre.querySelector('code');
+                if (!codeElement) return;
+                
+                // 获取代码内容和语言
+                let language = 'html';
+                if (codeElement.className) {
+                    const langMatch = codeElement.className.match(/language-(\w+)/);
+                    if (langMatch) language = langMatch[1];
+                }
+                
+                // 创建Mac风格代码块
+                const macStyleBlock = document.createElement('div');
+                macStyleBlock.className = 'mac-style-code-block';
+                macStyleBlock.innerHTML = `
+                    <div class="mac-window">
+                        <div class="mac-window-header">
+                            <div class="mac-btn mac-close"></div>
+                            <div class="mac-btn mac-minimize"></div>
+                            <div class="mac-btn mac-maximize"></div>
+                        </div>
+                        <pre class="hljs">
+                            <code class="language-${language}">${codeElement.innerHTML}</code>
+                        </pre>
+                    </div>
+                `;
+                
+                // 替换原来的pre元素
+                pre.parentNode.replaceChild(macStyleBlock, pre);
+            });
+        }
     }
     
     /**
@@ -331,7 +388,8 @@ ${content}</tr>
     switchTheme(theme) {
         // 移除所有主题类
         const themeClasses = [
-            'wechat-theme'
+            'wechat-theme',
+            'ai-theme'
         ];
         
         themeClasses.forEach(cls => {
@@ -369,6 +427,22 @@ ${content}</tr>
                 ul: 'margin: 12px 0; padding-left: 25px;',
                 ol: 'margin: 12px 0; padding-left: 25px;',
                 li: 'margin: 5px 0;'
+            },
+            ai: {
+                base: 'font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333; letter-spacing: 1px; padding: 0 1.0em; text-align: justify; background-color: #ffffff;',
+                h1: 'font-size: 20px; font-weight: bold; color: #2c3e50; margin: 22px 0 18px 0; padding-bottom: 12px; border-bottom: 2px solid #5a78ea; letter-spacing: 1px; line-height: 1.75; text-align: center;',
+                h2: 'position: relative; font-size: 20px; font-weight: bold; color: #5a78ea; margin: 20px 0 15px 0; padding: 10px 0; letter-spacing: 1px; line-height: 1.75; text-align: center;',
+                h3: 'font-size: 16px; font-weight: bold; color: #5a78ea; margin: 16px 0 10px 0; letter-spacing: 0.544px; line-height: 1.75; text-align: center; position: relative;',
+                p: 'margin: 12px 0; text-align: justify; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
+                strong: 'color: #e74c3c; font-weight: bold;',
+                em: 'color: #8e44ad; font-style: italic;',
+                blockquote: 'margin: 15px 0; padding: 15px 20px; background: #f8f9fa; border-left: 4px solid #5a78ea; border-radius: 0 8px 8px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
+                code: 'background: #f1f2f6; color: #e74c3c; padding: 2px 6px; border-radius: 4px; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; font-size: 15px; letter-spacing: 0.5px;',
+                pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; line-height: 1.5; position: relative;',
+                a: 'color: #5a78ea; text-decoration: none; border-bottom: 1px solid #5a78ea; font-size: 15px; letter-spacing: 0.5px; transition: all 0.3s ease;',
+                ul: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
+                ol: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
+                li: 'margin: 5px 0; font-size: 15px; line-height: 1.2; letter-spacing: 1px;'
             },
             juejin: {
                 base: 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif; line-height: 1.7; color: #2e3135;',
@@ -427,7 +501,7 @@ ${content}</tr>
                 h3: 'font-size: 18px; font-weight: 600; color: #667eea; margin: 18px 0 12px 0; padding: 8px 16px; border-left: 4px solid #667eea; background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent); border-radius: 0 8px 8px 0;',
                 strong: 'color: #667eea; font-weight: 600; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); padding: 2px 4px; border-radius: 3px;',
                 em: 'color: #764ba2; font-style: italic;',
-                blockquote: 'margin: 18px 0; padding: 16px 24px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)); border-left: 4px solid #667eea; border-radius: 0 12px 12px 0; color: #555; font-style: italic; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);',
+                blockquote: 'margin: 18px 0; padding: 16px 24px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)); border-left: 4px solid #667eea; border-radius: 0 12px 12px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
                 code: 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: #667eea; padding: 3px 6px; border-radius: 6px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 90%; border: 1px solid rgba(102, 126, 234, 0.2);',
                 pre: 'background: linear-gradient(135deg, #2d3748, #4a5568) !important; color: #e2e8f0 !important; padding: 24px; border-radius: 12px; margin: 18px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.6; font-size: 14px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);',
                 a: 'color: #667eea; text-decoration: none; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent); padding: 1px 3px; border-radius: 3px;',
@@ -546,8 +620,8 @@ ${content}</tr>
                         // 创建新的结构 - 修复代码渲染样式
                         const newStructure = `
                             <p style="font-size: 0px; line-height: 0; margin: 0px;">&nbsp;</p>
-                            <section style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); color: rgb(10, 10, 10); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; text-align: left; line-height: 1.75; font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-size: 16px;">
-                                <pre class="hljs code__pre" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-feature-settings: normal; font-variation-settings: normal; font-size: 14.4px; margin: 0px 8px 10px; color: rgb(173, 186, 199); background: rgb(34, 39, 46); text-align: left; line-height: 1.5; overflow-x: auto; border-radius: 8px; padding: 0px !important;">
+                            <section style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); color: rgb(10, 10, 10); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; text-align: left; line-height: 1.75; font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-size: 16px;">
+                                <pre class="hljs code__pre" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-feature-settings: normal; font-variation-settings: normal; font-size: 14.4px; margin: 0px 8px 10px; color: rgb(173, 186, 199); background: rgb(34, 39, 46); text-align: left; line-height: 1.5; overflow-x: auto; border-radius: 8px; padding: 0px !important;">
                                     <span class="mac-sign" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); display: flex; padding: 10px 14px 0px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0px" y="0px" width="45px" height="13px" viewBox="0 0 450 130">
                                             <ellipse cx="50" cy="65" rx="50" ry="52" stroke="rgb(220,60,54)" stroke-width="2" fill="rgb(237,108,96)"></ellipse>
@@ -563,6 +637,26 @@ ${content}</tr>
                         
                         // 替换原有的pre元素
                         element.outerHTML = newStructure;
+                    }
+                }
+                
+                // 特殊处理AI主题的h2和h3元素，添加伪元素
+                if (this.themeSelect.value === 'ai') {
+                    // 处理h2元素，添加图标
+                    if (tag === 'h2') {
+                        // 创建图标元素
+                        const iconImg = document.createElement('img');
+                        iconImg.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506101514132.png';
+                        iconImg.style.cssText = 'display: inline-block; vertical-align: middle; width: 29px; height: 29px; margin-right: 5px;';
+                        
+                        // 将图标插入到h2元素的最前面
+                        element.insertBefore(iconImg, element.firstChild);
+                    }
+                    
+                    // 处理h3元素，添加前后的双斜杠
+                    if (tag === 'h3') {
+                        // 在文本前后添加双斜杠
+                        element.innerHTML = '// ' + element.innerHTML + ' //';
                     }
                 }
             });
