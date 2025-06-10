@@ -33,6 +33,27 @@ body {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    /* 确保下拉菜单不被裁剪 */
+    overflow: visible;
+    position: relative;
+    z-index: 10; /* 设置适当的z-index */
+}
+
+/* 状态栏 */
+.status-bar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #666;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10; /* 设置与工具栏相同的z-index */
 }
 
 .toolbar h1 {
@@ -71,6 +92,96 @@ body {
     transition: all 0.3s ease;
 }
 
+/* 复制按钮组样式 */
+.copy-button-group {
+    position: relative;
+    display: inline-flex;
+    border-radius: 8px;
+    overflow: visible; /* 修改为visible，确保下拉菜单不被裁剪 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.copy-btn-main {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px 0 0 8px;
+}
+
+.copy-btn-dropdown {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 0 8px 8px 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.copy-btn-main:hover,
+.copy-btn-dropdown:hover {
+    background: linear-gradient(135deg, #5a6fd8, #6a4c93);
+    transform: translateY(-1px);
+}
+
+.copy-button-group:hover {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 下拉菜单样式 */
+.copy-dropdown-menu {
+    position: fixed; /* 改为fixed定位，相对于视口定位 */
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 100000; /* 确保比其他元素的z-index更高 */
+    margin-top: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    /* 确保内容完整显示 */
+    white-space: nowrap;
+    min-width: 150px; /* 设置最小宽度 */
+}
+
+.copy-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.copy-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.copy-option:last-child {
+    border-bottom: none;
+}
+
+.copy-option:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    color: #667eea;
+}
+
+.copy-option.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    color: #667eea;
+    font-weight: 500;
+}
+
 .copy-btn {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
@@ -107,6 +218,8 @@ body {
     gap: 20px;
     flex: 1;
     min-height: 0;
+    position: relative; /* 添加相对定位，作为子元素的参考 */
+    z-index: 1; /* 设置基础层级 */
 }
 
 .editor-panel, .preview-panel {
@@ -118,6 +231,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative; /* 添加相对定位 */
+    z-index: 2; /* 确保面板在基础层级之上 */
 }
 
 .panel-header {
@@ -170,36 +285,48 @@ body {
     font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
     line-height: 1.75;
     color: #333;
+    letter-spacing: 1px;
+    padding: 0 1.0em;
+    text-align: justify;
 }
 
 .wechat-theme h1 {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: bold;
     color: #2c3e50;
     margin: 20px 0 15px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid #3498db;
+    letter-spacing: 1px;
+    line-height: 1.75;
 }
 
 .wechat-theme h2 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
     color: #34495e;
     margin: 18px 0 12px 0;
     padding-left: 10px;
     border-left: 4px solid #3498db;
+    letter-spacing: 1px;
+    line-height: 1.75;
 }
 
 .wechat-theme h3 {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: bold;
     color: #2c3e50;
     margin: 16px 0 10px 0;
+    letter-spacing: 1px;
+    line-height: 1.75;
 }
 
 .wechat-theme p {
     margin: 12px 0;
     text-align: justify;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1px;
 }
 
 .wechat-theme strong {
@@ -219,15 +346,24 @@ body {
     border-left: 4px solid #3498db;
     border-radius: 0 8px 8px 0;
     color: #555;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
 }
 
 .wechat-theme ul, .wechat-theme ol {
     margin: 12px 0;
     padding-left: 25px;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1px;
 }
 
 .wechat-theme li {
     margin: 5px 0;
+    font-size: 15px;
+    line-height: 1.2;
+    letter-spacing: 1px;
 }
 
 .wechat-theme code {
@@ -236,7 +372,8 @@ body {
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.9em;
+    font-size: 15px;
+    letter-spacing: 0.5px;
 }
 
 .wechat-theme pre {
@@ -257,8 +394,9 @@ body {
     padding: 0 !important;
     border-radius: 0 !important;
     font-family: inherit !important;
-    font-size: 14px !important;
-    line-height: inherit !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.5px !important;
 }
 
 /* 确保hljs样式不被覆盖 */
@@ -272,10 +410,71 @@ body {
     color: inherit !important;
 }
 
+/* Mac风格代码块 */
+.mac-style-code-block {
+    margin: 15px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.mac-window {
+    background: #2d3748;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mac-window-header {
+    background: #1a202c;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mac-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.mac-close {
+    background: #ff5f56;
+    border: 1px solid #e0443e;
+}
+
+.mac-minimize {
+    background: #ffbd2e;
+    border: 1px solid #dea123;
+}
+
+.mac-maximize {
+    background: #27c93f;
+    border: 1px solid #1aab29;
+}
+
+.mac-style-code-block pre {
+    margin: 0 !important;
+    padding: 15px !important;
+    background: #2d3748 !important;
+    border-radius: 0 0 8px 8px !important;
+}
+
+.mac-style-code-block code {
+    background: transparent !important;
+    color: #e2e8f0 !important;
+    padding: 0 !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
 .wechat-theme a {
     color: #3498db;
     text-decoration: none;
     border-bottom: 1px solid #3498db;
+    font-size: 15px;
+    letter-spacing: 0.5px;
 }
 
 .wechat-theme a:hover {
@@ -283,248 +482,11 @@ body {
     border-bottom-color: #2980b9;
 }
 
-/* 掘金主题样式 */
-.juejin-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-    line-height: 1.7;
-    color: #2e3135;
-}
 
-.juejin-theme h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e2329;
-    margin: 24px 0 16px 0;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #1e80ff;
-}
 
-.juejin-theme h2 {
-    font-size: 22px;
-    font-weight: 600;
-    color: #1e2329;
-    margin: 20px 0 12px 0;
-    padding-left: 12px;
-    border-left: 4px solid #1e80ff;
-}
 
-.juejin-theme strong {
-    color: #1e80ff;
-    font-weight: 600;
-}
 
-.juejin-theme blockquote {
-    background: #f7f8fa;
-    border-left: 4px solid #1e80ff;
-    padding: 16px 20px;
-    margin: 16px 0;
-    border-radius: 0 6px 6px 0;
-}
 
-.juejin-theme code {
-    background: #f7f8fa;
-    color: #ff6b6b;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-
-.juejin-theme pre {
-    background: #1e1e1e !important;
-    color: #d4d4d4 !important;
-    padding: 20px;
-    border-radius: 6px;
-    margin: 16px 0;
-    overflow-x: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    line-height: 1.5;
-}
-
-.juejin-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: 14px !important;
-    line-height: inherit !important;
-}
-
-.juejin-theme pre code.hljs {
-    background: transparent !important;
-    padding: 0 !important;
-}
-
-.juejin-theme .hljs {
-    background: transparent !important;
-    color: inherit !important;
-}
-
-/* 知乎主题样式 */
-.zhihu-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
-    line-height: 1.6;
-    color: #1a1a1a;
-}
-
-.zhihu-theme h1 {
-    font-size: 26px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 20px 0 16px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #0084ff;
-}
-
-.zhihu-theme h2 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 18px 0 12px 0;
-    padding-left: 10px;
-    border-left: 4px solid #0084ff;
-}
-
-.zhihu-theme strong {
-    color: #0084ff;
-    font-weight: 600;
-}
-
-.zhihu-theme blockquote {
-    background: #f6f6f6;
-    border-left: 4px solid #0084ff;
-    padding: 15px 18px;
-    margin: 15px 0;
-    border-radius: 0 4px 4px 0;
-}
-
-.zhihu-theme code {
-    background: #f6f6f6;
-    color: #0084ff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.9em;
-}
-
-.zhihu-theme pre {
-    background: #2d3748 !important;
-    color: #e2e8f0 !important;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 15px 0;
-    overflow-x: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    line-height: 1.5;
-}
-
-.zhihu-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: 14px !important;
-    line-height: inherit !important;
-}
-
-.zhihu-theme pre code.hljs {
-    background: transparent !important;
-    padding: 0 !important;
-}
-
-.zhihu-theme .hljs {
-    background: transparent !important;
-    color: inherit !important;
-}
-
-.zhihu-theme a {
-    color: #0084ff;
-    text-decoration: none;
-    border-bottom: 1px solid #0084ff;
-}
-
-.zhihu-theme a:hover {
-    color: #0066cc;
-    border-bottom-color: #0066cc;
-}
-
-/* GitHub主题样式 */
-.github-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    color: #24292e;
-}
-
-.github-theme h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #24292e;
-    margin: 20px 0 16px 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e1e4e8;
-}
-
-.github-theme h2 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #24292e;
-    margin: 18px 0 12px 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #eaecef;
-}
-
-.github-theme strong {
-    color: #d73a49;
-    font-weight: 600;
-}
-
-.github-theme blockquote {
-    background: #f6f8fa;
-    border-left: 4px solid #dfe2e5;
-    padding: 15px 20px;
-    margin: 15px 0;
-    color: #6a737d;
-}
-
-.github-theme code {
-    background: #f6f8fa;
-    color: #d73a49;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 0.9em;
-}
-
-.github-theme pre {
-    background: #f6f8fa !important;
-    color: #24292e !important;
-    padding: 16px;
-    border-radius: 6px;
-    margin: 16px 0;
-    overflow-x: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    line-height: 1.5;
-}
-
-.github-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: 14px !important;
-    line-height: inherit !important;
-}
-
-.github-theme pre code.hljs {
-    background: transparent !important;
-    padding: 0 !important;
-}
-
-.github-theme .hljs {
-    background: transparent !important;
-    color: inherit !important;
-}
 
 /* 状态栏 */
 .status-bar {
@@ -555,7 +517,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+    z-index: 99990; /* 确保模态框在大多数元素之上，但在下拉菜单之下 */
     backdrop-filter: blur(5px);
 }
 
@@ -621,7 +583,7 @@ body {
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
     transform: translateX(400px);
     transition: transform 0.3s ease;
-    z-index: 1001;
+    z-index: 99995; /* 确保提示框在模态框之上，但在下拉菜单之下 */
     font-weight: 500;
 }
 
@@ -673,1010 +635,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
-}
-
-/* Doocs经典主题样式 */
-.doocs-classic-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
-    line-height: 1.75;
-    color: #333;
-    text-align: left;
-}
-
-.doocs-classic-theme h1 {
-    font-size: 24px;
-    font-weight: bold;
-    color: #2c3e50;
-    margin: 20px 0 15px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #3498db;
-    text-align: center;
-}
-
-.doocs-classic-theme h2 {
-    font-size: 20px;
-    font-weight: bold;
-    color: #34495e;
-    margin: 18px 0 12px 0;
-    padding: 8px 16px;
-    background: #3498db;
-    color: white;
-    border-radius: 6px;
-    text-align: center;
-}
-
-.doocs-classic-theme h3 {
-    font-size: 18px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 16px 0 10px 0;
-    padding-left: 12px;
-    border-left: 4px solid #3498db;
-    background: rgba(52, 152, 219, 0.1);
-    padding: 8px 12px;
-    border-radius: 4px;
-}
-
-.doocs-classic-theme h4 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 14px 0 8px 0;
-}
-
-.doocs-classic-theme h5 {
-    font-size: 15px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 12px 0 6px 0;
-}
-
-.doocs-classic-theme h6 {
-    font-size: 14px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 10px 0 5px 0;
-}
-
-.doocs-classic-theme p {
-    margin: 12px 8px;
-    text-align: justify;
-    letter-spacing: 0.1em;
-}
-
-.doocs-classic-theme strong {
-    color: #3498db;
-    font-weight: bold;
-}
-
-.doocs-classic-theme em {
-    color: #8e44ad;
-    font-style: italic;
-}
-
-.doocs-classic-theme blockquote {
-    margin: 15px 0;
-    padding: 15px 20px 15px 40px;
-    background: #f8f9fa;
-    border-left: 4px solid #3498db;
-    border-radius: 6px;
-    color: rgba(0,0,0,0.6);
-    font-style: italic;
-    border-right: 0.2px solid rgba(0, 0, 0, 0.04);
-    border-top: 0.2px solid rgba(0, 0, 0, 0.04);
-    border-bottom: 0.2px solid rgba(0, 0, 0, 0.04);
-}
-
-.doocs-classic-theme ul, .doocs-classic-theme ol {
-    margin: 12px 0;
-    padding-left: 24px;
-}
-
-.doocs-classic-theme li {
-    margin: 5px 8px;
-    text-indent: -1em;
-    display: block;
-}
-
-.doocs-classic-theme code {
-    background: rgba(27,31,35,.05);
-    color: #d14;
-    padding: 3px 5px;
-    border-radius: 4px;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    font-size: 90%;
-}
-
-.doocs-classic-theme pre {
-    background: #2d3748 !important;
-    color: #e2e8f0 !important;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 15px 0;
-    overflow-x: auto;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    line-height: 1.5;
-    font-size: 14px;
-}
-
-.doocs-classic-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    white-space: pre-wrap;
-}
-
-.doocs-classic-theme a {
-    color: #576b95;
-    text-decoration: none;
-}
-
-.doocs-classic-theme a:hover {
-    color: #4a5a87;
-    text-decoration: underline;
-}
-
-.doocs-classic-theme hr {
-    height: 1px;
-    border: none;
-    margin: 20px 0;
-    background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.1), rgba(0,0,0,0));
-}
-
-.doocs-classic-theme img {
-    display: block;
-    width: 100%;
-    margin: 10px auto;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-/* Doocs优雅主题样式 */
-.doocs-elegant-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
-    line-height: 1.8;
-    color: #2c3e50;
-    text-align: left;
-}
-
-.doocs-elegant-theme h1 {
-    font-size: 26px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 24px auto 16px;
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    display: table;
-}
-
-.doocs-elegant-theme h2 {
-    font-size: 22px;
-    font-weight: 600;
-    color: white;
-    margin: 20px auto 14px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 20px 8px 20px 8px;
-    text-align: center;
-    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
-    display: table;
-}
-
-.doocs-elegant-theme h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 18px 0 12px 0;
-    padding: 8px 16px;
-    border-left: 4px solid #667eea;
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
-    border-radius: 0 8px 8px 0;
-}
-
-.doocs-elegant-theme h4 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 16px 0 10px 0;
-    padding-left: 8px;
-    border-left: 3px solid #667eea;
-}
-
-.doocs-elegant-theme h5 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 14px 0 8px 0;
-}
-
-.doocs-elegant-theme h6 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 12px 0 6px 0;
-}
-
-.doocs-elegant-theme p {
-    margin: 14px 8px;
-    text-align: justify;
-    letter-spacing: 0.05em;
-    line-height: 1.8;
-}
-
-.doocs-elegant-theme strong {
-    color: #667eea;
-    font-weight: 600;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    padding: 2px 4px;
-    border-radius: 3px;
-}
-
-.doocs-elegant-theme em {
-    color: #764ba2;
-    font-style: italic;
-}
-
-.doocs-elegant-theme blockquote {
-    margin: 18px 0;
-    padding: 16px 24px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    border-left: 4px solid #667eea;
-    border-radius: 0 12px 12px 0;
-    color: #555;
-    font-style: italic;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-}
-
-.doocs-elegant-theme ul, .doocs-elegant-theme ol {
-    margin: 14px 0;
-    padding-left: 28px;
-}
-
-.doocs-elegant-theme li {
-    margin: 6px 8px;
-    line-height: 1.7;
-}
-
-.doocs-elegant-theme code {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    color: #667eea;
-    padding: 3px 6px;
-    border-radius: 6px;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    font-size: 90%;
-    border: 1px solid rgba(102, 126, 234, 0.2);
-}
-
-.doocs-elegant-theme pre {
-    background: linear-gradient(135deg, #2d3748, #4a5568) !important;
-    color: #e2e8f0 !important;
-    padding: 24px;
-    border-radius: 12px;
-    margin: 18px 0;
-    overflow-x: auto;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    line-height: 1.6;
-    font-size: 14px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.doocs-elegant-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    border: none !important;
-}
-
-.doocs-elegant-theme a {
-    color: #667eea;
-    text-decoration: none;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent);
-    padding: 1px 3px;
-    border-radius: 3px;
-    transition: all 0.3s ease;
-}
-
-.doocs-elegant-theme a:hover {
-    color: #764ba2;
-    background: linear-gradient(135deg, rgba(118, 75, 162, 0.2), transparent);
-}
-
-.doocs-elegant-theme hr {
-    height: 2px;
-    border: none;
-    margin: 24px 0;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 1px;
-}
-
-.doocs-elegant-theme img {
-    display: block;
-    width: 100%;
-    margin: 16px auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-}
-
-/* Doocs简洁主题样式 */
-.doocs-simple-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
-    line-height: 1.75;
-    color: #333;
-    text-align: left;
-}
-
-.doocs-simple-theme h1 {
-    font-size: 24px;
-    font-weight: bold;
-    color: #2c3e50;
-    margin: 20px auto 15px;
-    padding: 8px 16px;
-    border-bottom: 2px solid #3498db;
-    text-align: center;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.05);
-    display: table;
-}
-
-.doocs-simple-theme h2 {
-    font-size: 20px;
-    font-weight: bold;
-    color: white;
-    margin: 32px auto 16px;
-    padding: 6px 20px;
-    background: #3498db;
-    border-radius: 8px 24px 8px 24px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    display: table;
-}
-
-.doocs-simple-theme h3 {
-    font-size: 18px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 16px 0 12px 0;
-    padding-left: 12px;
-    border-left: 4px solid #3498db;
-    background: rgba(52, 152, 219, 0.08);
-    padding: 8px 12px;
-    border-radius: 6px;
-    border-right: 1px solid rgba(52, 152, 219, 0.1);
-    border-bottom: 1px solid rgba(52, 152, 219, 0.1);
-    border-top: 1px solid rgba(52, 152, 219, 0.1);
-    line-height: 2.4;
-}
-
-.doocs-simple-theme h4 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 16px 8px 8px;
-    border-radius: 6px;
-}
-
-.doocs-simple-theme h5 {
-    font-size: 15px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 12px 8px 6px;
-    border-radius: 6px;
-}
-
-.doocs-simple-theme h6 {
-    font-size: 14px;
-    font-weight: bold;
-    color: #3498db;
-    margin: 12px 8px 6px;
-    border-radius: 6px;
-}
-
-.doocs-simple-theme p {
-    margin: 12px 8px;
-    text-align: justify;
-    letter-spacing: 0.1em;
-}
-
-.doocs-simple-theme strong {
-    color: #3498db;
-    font-weight: bold;
-}
-
-.doocs-simple-theme em {
-    color: #8e44ad;
-    font-style: italic;
-}
-
-.doocs-simple-theme blockquote {
-    margin: 15px 0;
-    padding: 16px 16px 16px 32px;
-    background: #f8f9fa;
-    border-left: 4px solid #3498db;
-    border-radius: 6px;
-    color: rgba(0,0,0,0.6);
-    font-style: italic;
-    border-bottom: 0.2px solid rgba(0, 0, 0, 0.04);
-    border-top: 0.2px solid rgba(0, 0, 0, 0.04);
-    border-right: 0.2px solid rgba(0, 0, 0, 0.04);
-}
-
-.doocs-simple-theme ul {
-    list-style: none;
-    margin: 12px 0;
-    padding-left: 24px;
-}
-
-.doocs-simple-theme ol {
-    margin: 12px 0;
-    padding-left: 24px;
-}
-
-.doocs-simple-theme li {
-    margin: 5px 8px;
-    text-indent: -1em;
-    display: block;
-}
-
-.doocs-simple-theme code {
-    background: rgba(27,31,35,.05);
-    color: #d14;
-    padding: 3px 5px;
-    border-radius: 4px;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    font-size: 90%;
-}
-
-.doocs-simple-theme pre {
-    background: #2d3748 !important;
-    color: #e2e8f0 !important;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 15px 0;
-    overflow-x: auto;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    line-height: 1.5;
-    font-size: 14px;
-}
-
-.doocs-simple-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    white-space: pre-wrap;
-}
-
-.doocs-simple-theme a {
-    color: #576b95;
-    text-decoration: none;
-}
-
-.doocs-simple-theme a:hover {
-    color: #4a5a87;
-    text-decoration: underline;
-}
-
-.doocs-simple-theme hr {
-    height: 1px;
-    border: none;
-    margin: 16px 0;
-    background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.1), rgba(0,0,0,0));
-}
-
-.doocs-simple-theme img {
-    display: block;
-    width: 100%;
-    margin: 8px auto;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-/* Doocs现代主题样式 */
-.doocs-modern-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
-    line-height: 1.7;
-    color: #1a202c;
-    text-align: left;
-}
-
-.doocs-modern-theme h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 24px 0 18px 0;
-    padding: 16px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.doocs-modern-theme h1::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-.doocs-modern-theme h1:hover::before {
-    left: 100%;
-}
-
-.doocs-modern-theme h2 {
-    font-size: 22px;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 20px 0 14px 0;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    border-left: 4px solid #667eea;
-    border-radius: 0 12px 12px 0;
-    position: relative;
-}
-
-.doocs-modern-theme h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    transition: width 0.3s ease;
-}
-
-.doocs-modern-theme h2:hover::after {
-    width: 100%;
-}
-
-.doocs-modern-theme h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 18px 0 12px 0;
-    padding: 8px 16px;
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
-    border-left: 4px solid #667eea;
-    border-radius: 0 8px 8px 0;
-    transition: all 0.3s ease;
-}
-
-.doocs-modern-theme h3:hover {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
-    transform: translateX(4px);
-}
-
-.doocs-modern-theme h4 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 16px 0 10px 0;
-    padding-left: 12px;
-    border-left: 3px solid #667eea;
-}
-
-.doocs-modern-theme h5 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 14px 0 8px 0;
-}
-
-.doocs-modern-theme h6 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #667eea;
-    margin: 12px 0 6px 0;
-}
-
-.doocs-modern-theme p {
-    margin: 14px 8px;
-    text-align: justify;
-    letter-spacing: 0.02em;
-    line-height: 1.7;
-}
-
-.doocs-modern-theme strong {
-    color: #667eea;
-    font-weight: 600;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-.doocs-modern-theme strong:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
-    transform: scale(1.02);
-}
-
-.doocs-modern-theme em {
-    color: #764ba2;
-    font-style: italic;
-    position: relative;
-}
-
-.doocs-modern-theme blockquote {
-    margin: 18px 0;
-    padding: 18px 24px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    border-left: 4px solid #667eea;
-    border-radius: 0 16px 16px 0;
-    color: #4a5568;
-    font-style: italic;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.doocs-modern-theme blockquote::before {
-    content: '"';
-    position: absolute;
-    top: -10px;
-    left: 10px;
-    font-size: 60px;
-    color: rgba(102, 126, 234, 0.2);
-    font-family: serif;
-}
-
-.doocs-modern-theme ul, .doocs-modern-theme ol {
-    margin: 14px 0;
-    padding-left: 28px;
-}
-
-.doocs-modern-theme li {
-    margin: 6px 8px;
-    line-height: 1.6;
-    position: relative;
-}
-
-.doocs-modern-theme ul li::before {
-    content: '▸';
-    color: #667eea;
-    font-weight: bold;
-    position: absolute;
-    left: -16px;
-}
-
-.doocs-modern-theme code {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    color: #667eea;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    font-size: 90%;
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    transition: all 0.3s ease;
-}
-
-.doocs-modern-theme code:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-    transform: scale(1.02);
-}
-
-.doocs-modern-theme pre {
-    background: linear-gradient(135deg, #2d3748, #4a5568) !important;
-    color: #e2e8f0 !important;
-    padding: 24px;
-    border-radius: 16px;
-    margin: 20px 0;
-    overflow-x: auto;
-    font-family: 'Fira Code', Menlo, Operator Mono, Consolas, Monaco, monospace;
-    line-height: 1.6;
-    font-size: 14px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    position: relative;
-}
-
-.doocs-modern-theme pre::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 16px 16px 0 0;
-}
-
-.doocs-modern-theme pre code {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    border: none !important;
-}
-
-.doocs-modern-theme pre code:hover {
-    transform: none;
-}
-
-.doocs-modern-theme a {
-    color: #667eea;
-    text-decoration: none;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent);
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.doocs-modern-theme a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    transition: width 0.3s ease;
-}
-
-.doocs-modern-theme a:hover {
-    color: #764ba2;
-    background: linear-gradient(135deg, rgba(118, 75, 162, 0.2), transparent);
-    transform: translateY(-1px);
-}
-
-.doocs-modern-theme a:hover::after {
-    width: 100%;
-}
-
-.doocs-modern-theme hr {
-    height: 3px;
-    border: none;
-    margin: 28px 0;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 2px;
-    position: relative;
-    overflow: hidden;
-}
-
-.doocs-modern-theme hr::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-.doocs-modern-theme img {
-    display: block;
-    width: 100%;
-    margin: 20px auto;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    transition: all 0.3s ease;
-}
-
-.doocs-modern-theme img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-}
-
-/* MAC风格代码块主题 */
-.mac-style-theme pre {
-    background: #2d3748;
-    border: 1px solid #4a5568;
-    border-radius: 8px;
-    margin: 20px 0;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* MAC窗口头部 */
-.mac-style-theme pre::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 30px;
-    background: linear-gradient(180deg, #f6f6f6 0%, #e8e8e8 100%);
-    border-bottom: 1px solid #d0d0d0;
-    z-index: 1;
-}
-
-/* MAC窗口控制按钮（红黄绿三个圆点） */
-.mac-style-theme pre::after {
-    content: '';
-    position: absolute;
-    top: 9px;
-    left: 12px;
-    width: 12px;
-    height: 12px;
-    background: #ff5f57;
-    border-radius: 50%;
-    box-shadow: 
-        20px 0 0 #ffbd2e,
-        40px 0 0 #28ca42,
-        0 0 0 1px rgba(0, 0, 0, 0.1),
-        20px 0 0 1px rgba(0, 0, 0, 0.1),
-        40px 0 0 1px rgba(0, 0, 0, 0.1);
-    z-index: 2;
-}
-
-.mac-style-theme pre code {
-    color: #e2e8f0;
-    font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-    display: block;
-    padding: 45px 20px 20px 20px;
-    margin: 0;
-    background: transparent;
-    position: relative;
-    z-index: 0;
-}
-
-/* MAC风格的语法高亮 */
-.mac-style-theme .hljs-keyword {
-    color: #ff79c6;
-}
-
-.mac-style-theme .hljs-string {
-    color: #f1fa8c;
-}
-
-.mac-style-theme .hljs-comment {
-    color: #6272a4;
-    font-style: italic;
-}
-
-.mac-style-theme .hljs-number {
-    color: #bd93f9;
-}
-
-.mac-style-theme .hljs-function {
-    color: #50fa7b;
-}
-
-.mac-style-theme .hljs-variable {
-    color: #8be9fd;
-}
-
-.mac-style-theme .hljs-title {
-    color: #50fa7b;
-}
-
-.mac-style-theme .hljs-params {
-    color: #ffb86c;
-}
-
-.mac-style-theme .hljs-built_in {
-    color: #8be9fd;
-}
-
-/* MAC风格的其他元素 */
-.mac-style-theme h1, .mac-style-theme h2, .mac-style-theme h3, 
-.mac-style-theme h4, .mac-style-theme h5, .mac-style-theme h6 {
-    color: #2d3748;
-    font-weight: 600;
-    margin: 1.5em 0 0.8em 0;
-    line-height: 1.3;
-}
-
-.mac-style-theme h1 {
-    font-size: 2em;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 0.3em;
-}
-
-.mac-style-theme h2 {
-    font-size: 1.6em;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 0.2em;
-}
-
-.mac-style-theme h3 {
-    font-size: 1.3em;
-}
-
-.mac-style-theme p {
-    margin: 1em 0;
-    line-height: 1.7;
-    color: #4a5568;
-}
-
-.mac-style-theme blockquote {
-    border-left: 4px solid #4299e1;
-    background: #f7fafc;
-    padding: 15px 20px;
-    margin: 20px 0;
-    border-radius: 0 8px 8px 0;
-    color: #2d3748;
-    font-style: italic;
-}
-
-.mac-style-theme ul, .mac-style-theme ol {
-    padding-left: 2em;
-    margin: 1em 0;
-}
-
-.mac-style-theme li {
-    margin: 0.5em 0;
-    line-height: 1.6;
-    color: #4a5568;
-}
-
-.mac-style-theme code {
-    background: #edf2f7;
-    color: #e53e3e;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
-    font-size: 0.9em;
-}
-
-.mac-style-theme table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 20px 0;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.mac-style-theme th {
-    background: #4a5568;
-    color: white;
-    padding: 12px 15px;
-    text-align: left;
-    font-weight: 600;
-}
-
-.mac-style-theme td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #4a5568;
-}
-
-.mac-style-theme tr:nth-child(even) {
-    background: #f7fafc;
-}
-
-.mac-style-theme a {
-    color: #4299e1;
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.3s ease;
-}
-
-.mac-style-theme a:hover {
-    border-bottom-color: #4299e1;
 }

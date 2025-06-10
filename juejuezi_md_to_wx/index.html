@@ -18,16 +18,16 @@
             <div class="toolbar-controls">
                 <select id="themeSelect" class="theme-select">
                     <option value="wechat">微信公众号</option>
-                    <option value="juejin">掘金风格</option>
-                    <option value="zhihu">知乎风格</option>
-                    <option value="github">GitHub风格</option>
-                    <option value="doocs-classic">Doocs经典</option>
-                    <option value="doocs-elegant">Doocs优雅</option>
-                    <option value="doocs-simple">Doocs简洁</option>
-                    <option value="doocs-modern">Doocs现代</option>
-                    <option value="mac-style">🍎 MAC风格窗口</option>
                 </select>
-                <button id="copyBtn" class="copy-btn">📋 复制带样式HTML</button>
+                <div class="copy-button-group">
+                    <button id="copyBtn" class="copy-btn-main">📋 复制</button>
+                    <button id="copyDropdownBtn" class="copy-btn-dropdown">▼</button>
+                    <div id="copyDropdownMenu" class="copy-dropdown-menu">
+                        <div class="copy-option" data-format="wechat">📱 公众号格式</div>
+                        <div class="copy-option" data-format="html">🌐 HTML格式</div>
+                        <div class="copy-option" data-format="markdown">📝 MD格式</div>
+                    </div>
+                </div>
                 <button id="clearBtn" class="clear-btn">🗑️ 清空</button>
             </div>
         </div>

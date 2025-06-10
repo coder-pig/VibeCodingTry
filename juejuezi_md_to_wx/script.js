@@ -20,6 +20,9 @@ class MarkdownConverter {
         this.preview = document.getElementById('preview');
         this.themeSelect = document.getElementById('themeSelect');
         this.copyBtn = document.getElementById('copyBtn');
+        this.copyDropdownBtn = document.getElementById('copyDropdownBtn');
+        this.copyDropdownMenu = document.getElementById('copyDropdownMenu');
+        this.copyOptions = document.querySelectorAll('.copy-option');
         this.clearBtn = document.getElementById('clearBtn');
         this.insertTemplate = document.getElementById('insertTemplate');
         this.fullscreenBtn = document.getElementById('fullscreenBtn');
@@ -29,6 +32,9 @@ class MarkdownConverter {
         this.copyToast = document.getElementById('copyToast');
         this.wordCount = document.getElementById('wordCount');
         this.charCount = document.getElementById('charCount');
+        
+        // 当前选择的复制格式，默认为公众号格式
+        this.currentCopyFormat = 'wechat';
     }
 
     /**
@@ -133,9 +139,35 @@ ${content}</tr>
             this.saveToStorage();
         });
 
-        // 复制HTML
+        // 复制按钮（默认公众号格式）
         this.copyBtn.addEventListener('click', () => {
             this.copyToClipboard();
+        });
+
+        // 下拉按钮点击
+        this.copyDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleDropdownMenu();
+        });
+
+        // 复制格式选项点击
+        this.copyOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止事件冒泡
+                const format = option.getAttribute('data-format');
+                this.selectCopyFormat(format);
+                this.hideDropdownMenu();
+            });
+        });
+
+        // 阻止下拉菜单本身的点击事件冒泡
+        this.copyDropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', () => {
+            this.hideDropdownMenu();
         });
 
         // 清空内容
@@ -216,8 +248,8 @@ ${content}</tr>
      * 更新预览内容
      */
     updatePreview() {
-        const markdownText = this.markdownInput.value;
         try {
+            const markdownText = this.markdownInput.value;
             const html = marked.parse(markdownText);
             const cleanHtml = DOMPurify.sanitize(html);
             this.preview.innerHTML = cleanHtml;
@@ -226,12 +258,55 @@ ${content}</tr>
             this.preview.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
+            
+            // 处理代码块，添加Mac风格
+            this.applyMacStyleToCodeBlocks();
         } catch (error) {
             console.error('Markdown解析错误:', error);
             this.preview.innerHTML = '<p style="color: #e74c3c;">⚠️ Markdown解析出错，请检查语法</p>';
         }
     }
 
+    /**
+     * 应用Mac风格到代码块
+     */
+    applyMacStyleToCodeBlocks() {
+        // 查找所有代码块
+        const codeBlocks = this.preview.querySelectorAll('pre');
+        
+        codeBlocks.forEach(pre => {
+            const codeElement = pre.querySelector('code');
+            if (!codeElement) return;
+            
+            // 获取代码内容和语言
+            const codeText = codeElement.textContent;
+            let language = 'html';
+            if (codeElement.className) {
+                const langMatch = codeElement.className.match(/language-(\w+)/);
+                if (langMatch) language = langMatch[1];
+            }
+            
+            // 创建Mac风格代码块
+            const macStyleBlock = document.createElement('div');
+            macStyleBlock.className = 'mac-style-code-block';
+            macStyleBlock.innerHTML = `
+                <div class="mac-window">
+                    <div class="mac-window-header">
+                        <div class="mac-btn mac-close"></div>
+                        <div class="mac-btn mac-minimize"></div>
+                        <div class="mac-btn mac-maximize"></div>
+                    </div>
+                    <pre class="hljs">
+                        <code class="language-${language}">${codeElement.innerHTML}</code>
+                    </pre>
+                </div>
+            `;
+            
+            // 替换原来的pre元素
+            pre.parentNode.replaceChild(macStyleBlock, pre);
+        });
+    }
+    
     /**
      * 切换主题
      */
@@ -256,9 +331,7 @@ ${content}</tr>
     switchTheme(theme) {
         // 移除所有主题类
         const themeClasses = [
-            'wechat-theme', 'juejin-theme', 'zhihu-theme', 'github-theme',
-            'doocs-classic-theme', 'doocs-elegant-theme', 'doocs-simple-theme', 'doocs-modern-theme',
-            'mac-style-theme'
+            'wechat-theme'
         ];
         
         themeClasses.forEach(cls => {
@@ -402,11 +475,13 @@ ${content}</tr>
                 em: 'color: #4a5568; font-style: italic;',
                 blockquote: 'border-left: 4px solid #4299e1; background: #f7fafc; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; color: #2d3748; font-style: italic;',
                 code: 'background: #edf2f7; color: #e53e3e; padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 0.9em;',
-                pre: 'position: relative; background: #2d3748 !important; border: 1px solid #4a5568; border-radius: 8px; margin: 20px 0; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 45px 20px 20px 20px !important; color: #e2e8f0 !important; font-family: "SF Mono", Monaco, Menlo, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.6;',
+                pre: 'background: #2d3748 !important; border: 1px solid #4a5568; border-radius: 8px; margin: 20px 0; overflow-x: auto; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 20px !important; color: #e2e8f0 !important; font-family: "SF Mono", Monaco, Menlo, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.6;',
                 a: 'color: #4299e1; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease;',
                 ul: 'padding-left: 2em; margin: 1em 0;',
                 ol: 'padding-left: 2em; margin: 1em 0;',
-                li: 'margin: 0.5em 0; line-height: 1.6; color: #4a5568;'
+                li: 'margin: 0.5em 0; line-height: 1.6; color: #4a5568;',
+                macHeader: 'content: ""; position: absolute; top: 0; left: 0; right: 0; height: 30px; background: linear-gradient(180deg, #f6f6f6 0%, #e8e8e8 100%); border-bottom: 1px solid #d0d0d0; z-index: 1;',
+                macButtons: 'content: ""; position: absolute; top: 9px; left: 12px; width: 12px; height: 12px; background: #ff5f57; border-radius: 50%; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #28ca42, 0 0 0 1px rgba(0, 0, 0, 0.1), 20px 0 0 1px rgba(0, 0, 0, 0.1), 40px 0 0 1px rgba(0, 0, 0, 0.1); z-index: 2;'
             }
         };
         return styles[theme] || styles.wechat;
@@ -452,6 +527,43 @@ ${content}</tr>
                     if (codeInPre) {
                         codeInPre.style.cssText = 'background: transparent; color: inherit; padding: 0; border-radius: 0;';
                     }
+                    
+                    // 微信主题和MAC风格主题特殊处理：使用SVG绘制红黄绿圆点（微信兼容版本）
+                    if (this.themeSelect.value === 'wechat' || this.themeSelect.value === 'mac-style') {
+                        // 重新构建整个pre结构，使用用户提供的样式
+                        const codeContent = element.querySelector('code');
+                        const codeText = codeContent ? codeContent.textContent : element.textContent;
+                        
+                        // 获取代码语言类型
+                        let language = 'html';
+                        if (codeContent && codeContent.className) {
+                            const langMatch = codeContent.className.match(/language-([\w-]+)/);
+                            if (langMatch) {
+                                language = langMatch[1];
+                            }
+                        }
+                        
+                        // 创建新的结构 - 修复代码渲染样式
+                        const newStructure = `
+                            <p style="font-size: 0px; line-height: 0; margin: 0px;">&nbsp;</p>
+                            <section style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); color: rgb(10, 10, 10); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; text-align: left; line-height: 1.75; font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-size: 16px;">
+                                <pre class="hljs code__pre" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-feature-settings: normal; font-variation-settings: normal; font-size: 14.4px; margin: 0px 8px 10px; color: rgb(173, 186, 199); background: rgb(34, 39, 46); text-align: left; line-height: 1.5; overflow-x: auto; border-radius: 8px; padding: 0px !important;">
+                                    <span class="mac-sign" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); display: flex; padding: 10px 14px 0px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0px" y="0px" width="45px" height="13px" viewBox="0 0 450 130">
+                                            <ellipse cx="50" cy="65" rx="50" ry="52" stroke="rgb(220,60,54)" stroke-width="2" fill="rgb(237,108,96)"></ellipse>
+                                            <ellipse cx="225" cy="65" rx="50" ry="52" stroke="rgb(218,151,33)" stroke-width="2" fill="rgb(247,193,81)"></ellipse>
+                                            <ellipse cx="400" cy="65" rx="50" ry="52" stroke="rgb(27,161,37)" stroke-width="2" fill="rgb(100,200,86)"></ellipse>
+                                        </svg>
+                                    </span>
+                                    <code class="language-${language || 'html'}" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: Menlo, &quot;Operator Mono&quot;, Consolas, Monaco, monospace; font-feature-settings: normal; font-variation-settings: normal; font-size: 12.96px; display: -webkit-box; padding: 0.5em 1em 1em; overflow-x: auto; text-indent: 0px; text-align: left; line-height: 1.75; margin: 0px; white-space: nowrap;">${codeText}</code>
+                                </pre>
+                            </section>
+                            <p style="font-size: 0px; line-height: 0; margin: 0px;">&nbsp;</p>
+                        `;
+                        
+                        // 替换原有的pre元素
+                        element.outerHTML = newStructure;
+                    }
                 }
             });
         });
@@ -460,40 +572,127 @@ ${content}</tr>
     }
 
     /**
-     * 复制预览区域的HTML代码到剪贴板（适合微信公众号）
+     * 格式化HTML代码，添加适当的缩进和换行
+     */
+    formatHtml(html) {
+        // 移除多余的空白字符
+        html = html.replace(/\s+/g, ' ').trim();
+        
+        let formatted = '';
+        let indent = 0;
+        const indentSize = 2; // 使用2个空格作为缩进
+        
+        // 自闭合标签列表
+        const selfClosingTags = ['img', 'br', 'hr', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'source', 'track', 'wbr'];
+        
+        // 内联元素列表（不需要换行的元素）
+        const inlineTags = ['a', 'span', 'strong', 'em', 'b', 'i', 'u', 'code', 'small', 'sub', 'sup'];
+        
+        // 分割HTML为标签和文本
+        const tokens = html.match(/<\/?[^>]+>|[^<]+/g) || [];
+        
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i].trim();
+            if (!token) continue;
+            
+            if (token.startsWith('<')) {
+                // 处理标签
+                const isClosingTag = token.startsWith('</');
+                const isOpeningTag = !isClosingTag && !token.endsWith('/>');
+                const tagName = token.match(/<\/?([a-zA-Z0-9]+)/)?.[1]?.toLowerCase();
+                const isSelfClosing = selfClosingTags.includes(tagName) || token.endsWith('/>');
+                const isInline = inlineTags.includes(tagName);
+                
+                if (isClosingTag) {
+                    indent--;
+                    if (!isInline) {
+                        formatted += '\n' + ' '.repeat(indent * indentSize);
+                    }
+                    formatted += token;
+                } else {
+                    if (!isInline && formatted && !formatted.endsWith('\n')) {
+                        formatted += '\n' + ' '.repeat(indent * indentSize);
+                    } else if (!isInline && formatted) {
+                        formatted += ' '.repeat(indent * indentSize);
+                    }
+                    formatted += token;
+                    
+                    if (isOpeningTag && !isSelfClosing) {
+                        indent++;
+                    }
+                }
+            } else {
+                // 处理文本内容
+                const trimmedText = token.trim();
+                if (trimmedText) {
+                    formatted += trimmedText;
+                }
+            }
+        }
+        
+        return formatted;
+    }
+
+    /**
+     * 复制内容到剪贴板（支持三种格式）
      */
     async copyToClipboard() {
         try {
             const previewElement = this.preview;
+            const copyFormat = this.currentCopyFormat;
             
-            if (!previewElement.innerHTML.trim()) {
+            if (!previewElement.innerHTML.trim() && copyFormat !== 'markdown') {
                 this.showToast('⚠️ 没有内容可复制');
                 return;
             }
 
-            // 获取预览区域的HTML内容并转换为内联样式
-            const htmlWithInlineStyles = this.convertToInlineStyles(previewElement.innerHTML);
+            let contentToCopy = '';
+            let successMessage = '';
             
-            // 尝试使用现代 Clipboard API
+            switch (copyFormat) {
+                case 'wechat':
+                    // 公众号格式：富文本，直接复制渲染后的HTML内容
+                    await this.copyWechatFormat();
+                    return;
+                    
+                case 'html':
+                    // HTML格式：带内联样式的HTML代码
+                    const htmlWithInlineStyles = this.convertToInlineStyles(previewElement.innerHTML);
+                    contentToCopy = this.formatHtml(htmlWithInlineStyles);
+                    successMessage = '📋 HTML代码已复制到剪贴板！';
+                    break;
+                    
+                case 'markdown':
+                    // MD格式：原始Markdown文本
+                    contentToCopy = this.markdownInput.value;
+                    successMessage = '📋 Markdown文本已复制到剪贴板！';
+                    break;
+                    
+                default:
+                    this.showToast('❌ 未知的复制格式');
+                    return;
+            }
+            
+            // 使用现代 Clipboard API 复制文本
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(htmlWithInlineStyles);
-                this.showToast('📋 带样式的HTML代码已复制！可以粘贴到微信公众号编辑器了');
+                await navigator.clipboard.writeText(contentToCopy);
+                this.showToast(successMessage);
             } else {
                 // 降级方案：使用传统方法
                 const textArea = document.createElement('textarea');
-                textArea.value = htmlWithInlineStyles;
+                textArea.value = contentToCopy;
                 textArea.style.position = 'fixed';
                 textArea.style.opacity = '0';
                 textArea.style.left = '-9999px';
                 document.body.appendChild(textArea);
                 textArea.select();
-                textArea.setSelectionRange(0, 99999); // 兼容移动设备
+                textArea.setSelectionRange(0, 99999);
                 
                 const success = document.execCommand('copy');
                 document.body.removeChild(textArea);
                 
                 if (success) {
-                    this.showToast('📋 带样式的HTML代码已复制！可以粘贴到微信公众号编辑器了');
+                    this.showToast(successMessage);
                 } else {
                     this.showToast('❌ 复制失败，请手动选择内容复制');
                 }
@@ -505,18 +704,161 @@ ${content}</tr>
     }
 
     /**
+     * 复制公众号格式（富文本）
+     */
+    async copyWechatFormat() {
+        try {
+            const previewElement = this.preview;
+            
+            if (!previewElement.innerHTML.trim()) {
+                this.showToast('⚠️ 没有内容可复制');
+                return;
+            }
+
+            // 创建一个临时容器来处理富文本复制
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = this.convertToInlineStyles(previewElement.innerHTML);
+            tempContainer.style.position = 'fixed';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.top = '-9999px';
+            tempContainer.style.opacity = '0';
+            document.body.appendChild(tempContainer);
+            
+            // 选择内容
+            const range = document.createRange();
+            range.selectNodeContents(tempContainer);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            // 尝试使用现代 Clipboard API 复制富文本
+            if (navigator.clipboard && navigator.clipboard.write) {
+                try {
+                    const htmlBlob = new Blob([tempContainer.innerHTML], { type: 'text/html' });
+                    const textBlob = new Blob([tempContainer.textContent], { type: 'text/plain' });
+                    
+                    const clipboardItem = new ClipboardItem({
+                        'text/html': htmlBlob,
+                        'text/plain': textBlob
+                    });
+                    
+                    await navigator.clipboard.write([clipboardItem]);
+                    this.showToast('📋 富文本内容已复制！可以直接粘贴到微信公众号编辑器');
+                } catch (clipboardError) {
+                    // 如果现代API失败，使用传统方法
+                    const success = document.execCommand('copy');
+                    if (success) {
+                        this.showToast('📋 富文本内容已复制！可以直接粘贴到微信公众号编辑器');
+                    } else {
+                        this.showToast('❌ 复制失败，请手动选择内容复制');
+                    }
+                }
+            } else {
+                // 使用传统的 execCommand 方法
+                const success = document.execCommand('copy');
+                if (success) {
+                    this.showToast('📋 富文本内容已复制！可以直接粘贴到微信公众号编辑器');
+                } else {
+                    this.showToast('❌ 复制失败，请手动选择内容复制');
+                }
+            }
+            
+            // 清理
+            selection.removeAllRanges();
+            document.body.removeChild(tempContainer);
+            
+        } catch (error) {
+            console.error('富文本复制失败:', error);
+            this.showToast('❌ 富文本复制失败，请手动选择内容复制');
+        }
+    }
+
+    /**
+     * 切换下拉菜单显示/隐藏
+     */
+    toggleDropdownMenu() {
+        const isVisible = this.copyDropdownMenu.classList.contains('show');
+        if (isVisible) {
+            this.hideDropdownMenu();
+        } else {
+            this.showDropdownMenu();
+        }
+    }
+
+    /**
+     * 显示下拉菜单
+     */
+    showDropdownMenu() {
+        // 获取复制按钮组位置
+        const buttonGroupRect = this.copyBtn.parentElement.getBoundingClientRect();
+        const dropdownMenu = this.copyDropdownMenu;
+        
+        // 设置下拉菜单位置（相对于视口）
+        // 将菜单放在复制按钮组的下方中央
+        dropdownMenu.style.top = `${buttonGroupRect.bottom + 4}px`;
+        dropdownMenu.style.left = `${buttonGroupRect.left + (buttonGroupRect.width/2) - (dropdownMenu.offsetWidth/2 || 75)}px`;
+        
+        // 显示下拉菜单
+        dropdownMenu.classList.add('show');
+        console.log('下拉菜单已显示'); // 调试信息
+    }
+
+    /**
+     * 隐藏下拉菜单
+     */
+    hideDropdownMenu() {
+        this.copyDropdownMenu.classList.remove('show');
+        console.log('下拉菜单已隐藏'); // 调试信息
+    }
+
+    /**
+     * 选择复制格式
+     */
+    selectCopyFormat(format) {
+        console.log('选择复制格式:', format); // 调试信息
+        this.currentCopyFormat = format;
+        this.saveToStorage();
+        
+        // 更新按钮文本
+        const formatNames = {
+            'wechat': '📱 公众号格式',
+            'html': '🌐 HTML格式',
+            'markdown': '📝 MD格式'
+        };
+        
+        this.copyBtn.innerHTML = `📋 复制 (${formatNames[format].replace(/^[📱🌐📝] /, '')})`;
+        console.log('按钮文本已更新:', this.copyBtn.innerHTML); // 调试信息
+        
+        // 更新下拉菜单中的选中状态
+        this.copyOptions.forEach(option => {
+            option.classList.remove('active');
+            if (option.getAttribute('data-format') === format) {
+                option.classList.add('active');
+                console.log('设置选中状态:', option.textContent); // 调试信息
+            }
+        });
+    }
+
+    /**
      * 清空所有内容
      */
     clearContent() {
-        if (this.markdownInput.value.trim() && !confirm('确定要清空所有内容吗？')) {
+        if (this.markdownInput.value.trim() && !confirm('🗑️ 确定要清空所有内容吗？')) {
             return;
         }
         
         this.markdownInput.value = '';
-        this.preview.innerHTML = '<p style="color: #999; text-align: center; margin-top: 50px;">✨ 在左侧输入Markdown内容，这里会实时显示预览效果</p>';
+        this.preview.innerHTML = '<p style="color: #999; text-align: center; margin-top: 50px; font-size: 16px; line-height: 1.6;">✨ 在左侧输入Markdown内容，这里会实时显示预览效果</p>';
+        
+        // 同时清空全屏预览内容
+        this.fullscreenPreview.innerHTML = this.preview.innerHTML;
+        
         this.updateWordCount();
         this.saveToStorage();
         this.markdownInput.focus();
+        
+        // 显示清空成功提示
+        this.showToast('🗑️ 内容已清空');
     }
 
     /**
@@ -708,6 +1050,7 @@ console.log(greet('微信公众号'));
             const data = {
                 content: this.markdownInput.value,
                 theme: this.themeSelect.value,
+                copyFormat: this.currentCopyFormat,
                 timestamp: Date.now()
             };
             localStorage.setItem('markdown-converter-data', JSON.stringify(data));
@@ -726,11 +1069,23 @@ console.log(greet('微信公众号'));
                 const data = JSON.parse(saved);
                 this.markdownInput.value = data.content || '';
                 this.themeSelect.value = data.theme || 'wechat';
+                this.selectCopyFormat(data.copyFormat || 'wechat');
                 this.changeTheme();
                 this.updateWordCount();
+            } else {
+                // 如果没有保存的数据，设置默认格式
+                this.selectCopyFormat('wechat');
+            }
+            
+            // 如果没有内容，显示默认提示
+            if (!this.markdownInput.value.trim()) {
+                this.preview.innerHTML = '<p style="color: #999; text-align: center; margin-top: 50px; font-size: 16px; line-height: 1.6;">✨ 在左侧输入Markdown内容，这里会实时显示预览效果</p>';
             }
         } catch (error) {
             console.error('从本地存储加载失败:', error);
+            // 如果加载失败，设置默认格式
+            this.selectCopyFormat('wechat');
+            this.preview.innerHTML = '<p style="color: #999; text-align: center; margin-top: 50px; font-size: 16px; line-height: 1.6;">✨ 在左侧输入Markdown内容，这里会实时显示预览效果</p>';
         }
     }
 }
