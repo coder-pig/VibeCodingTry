@@ -324,44 +324,6 @@ ${content}</tr>
             // 替换原来的pre元素
             pre.parentNode.replaceChild(macStyleBlock, pre);
         });
-        
-        // 确保AI主题中的代码块也应用Mac风格
-        const aiTheme = document.querySelector('.ai-theme');
-        if (aiTheme) {
-            const aiCodeBlocks = aiTheme.querySelectorAll('pre');
-            aiCodeBlocks.forEach(pre => {
-                if (pre.parentNode.classList.contains('mac-style-code-block')) return;
-                
-                const codeElement = pre.querySelector('code');
-                if (!codeElement) return;
-                
-                // 获取代码内容和语言
-                let language = 'html';
-                if (codeElement.className) {
-                    const langMatch = codeElement.className.match(/language-(\w+)/);
-                    if (langMatch) language = langMatch[1];
-                }
-                
-                // 创建Mac风格代码块
-                const macStyleBlock = document.createElement('div');
-                macStyleBlock.className = 'mac-style-code-block';
-                macStyleBlock.innerHTML = `
-                    <div class="mac-window">
-                        <div class="mac-window-header">
-                            <div class="mac-btn mac-close"></div>
-                            <div class="mac-btn mac-minimize"></div>
-                            <div class="mac-btn mac-maximize"></div>
-                        </div>
-                        <pre class="hljs">
-                            <code class="language-${language}">${codeElement.innerHTML}</code>
-                        </pre>
-                    </div>
-                `;
-                
-                // 替换原来的pre元素
-                pre.parentNode.replaceChild(macStyleBlock, pre);
-            });
-        }
     }
     
     /**
@@ -444,119 +406,6 @@ ${content}</tr>
                 ol: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
                 li: 'margin: 5px 0; font-size: 15px; line-height: 1.2; letter-spacing: 1px;'
             },
-            juejin: {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif; line-height: 1.7; color: #2e3135;',
-                h1: 'font-size: 28px; font-weight: 700; color: #1e2329; margin: 24px 0 16px 0; padding-bottom: 12px; border-bottom: 2px solid #1e80ff;',
-                h2: 'font-size: 22px; font-weight: 600; color: #1e2329; margin: 20px 0 12px 0; padding-left: 12px; border-left: 4px solid #1e80ff;',
-                strong: 'color: #1e80ff; font-weight: 600;',
-                blockquote: 'background: #f7f8fa; border-left: 4px solid #1e80ff; padding: 16px 20px; margin: 16px 0; border-radius: 0 6px 6px 0;',
-                code: 'background: #f7f8fa; color: #ff6b6b; padding: 3px 6px; border-radius: 4px; font-size: 0.9em;',
-                pre: 'background: #1e1e1e !important; color: #d4d4d4 !important; padding: 20px; border-radius: 6px; margin: 16px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5;'
-            },
-            zhihu: {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; line-height: 1.6; color: #1a1a1a;',
-                h1: 'font-size: 26px; font-weight: 600; color: #1a1a1a; margin: 20px 0 16px 0; padding-bottom: 10px; border-bottom: 2px solid #0084ff;',
-                h2: 'font-size: 20px; font-weight: 600; color: #1a1a1a; margin: 18px 0 12px 0; padding-left: 10px; border-left: 4px solid #0084ff;',
-                strong: 'color: #0084ff; font-weight: 600;',
-                blockquote: 'background: #f6f6f6; border-left: 4px solid #0084ff; padding: 15px 18px; margin: 15px 0; border-radius: 0 4px 4px 0;',
-                code: 'background: #f6f6f6; color: #0084ff; padding: 2px 6px; border-radius: 4px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 0.9em;',
-                pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5;',
-                a: 'color: #0084ff; text-decoration: none; border-bottom: 1px solid #0084ff;',
-                ul: 'margin: 12px 0; padding-left: 25px;',
-                ol: 'margin: 12px 0; padding-left: 25px;',
-                li: 'margin: 6px 0;'
-            },
-            github: {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.6; color: #24292e;',
-                h1: 'font-size: 24px; font-weight: 600; color: #24292e; margin: 20px 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e1e4e8;',
-                h2: 'font-size: 20px; font-weight: 600; color: #24292e; margin: 18px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid #eaecef;',
-                strong: 'color: #d73a49; font-weight: 600;',
-                blockquote: 'background: #f6f8fa; border-left: 4px solid #dfe2e5; padding: 15px 20px; margin: 15px 0; color: #6a737d;',
-                code: 'background: #f6f8fa; color: #d73a49; padding: 2px 4px; border-radius: 3px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 0.9em;',
-                pre: 'background: #f6f8fa !important; color: #24292e !important; padding: 16px; border-radius: 6px; margin: 16px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5;',
-                a: 'color: #0366d6; text-decoration: none;',
-                ul: 'margin: 12px 0; padding-left: 25px;',
-                ol: 'margin: 12px 0; padding-left: 25px;',
-                li: 'margin: 6px 0;'
-            },
-            'doocs-classic': {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333;',
-                h1: 'font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #3498db; text-align: center;',
-                h2: 'font-size: 20px; font-weight: bold; color: white; margin: 18px 0 12px 0; padding: 8px 16px; background: #3498db; border-radius: 6px; text-align: center;',
-                h3: 'font-size: 18px; font-weight: bold; color: #3498db; margin: 16px 0 10px 0; padding: 8px 12px; border-left: 4px solid #3498db; background: rgba(52, 152, 219, 0.1); border-radius: 4px;',
-                strong: 'color: #3498db; font-weight: bold;',
-                em: 'color: #8e44ad; font-style: italic;',
-                blockquote: 'margin: 15px 0; padding: 15px 20px 15px 40px; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 6px; color: rgba(0,0,0,0.6); font-style: italic;',
-                code: 'background: rgba(27,31,35,.05); color: #d14; padding: 3px 5px; border-radius: 4px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 90%;',
-                pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5; font-size: 14px;',
-                a: 'color: #576b95; text-decoration: none;',
-                ul: 'margin: 12px 0; padding-left: 24px;',
-                ol: 'margin: 12px 0; padding-left: 24px;',
-                li: 'margin: 5px 8px; text-indent: -1em; display: block;'
-            },
-            'doocs-elegant': {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; line-height: 1.8; color: #2c3e50;',
-                h1: 'font-size: 26px; font-weight: 600; color: white; margin: 24px auto 16px; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); display: table;',
-                h2: 'font-size: 22px; font-weight: 600; color: white; margin: 20px auto 14px; padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px 8px 20px 8px; text-align: center; box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2); display: table;',
-                h3: 'font-size: 18px; font-weight: 600; color: #667eea; margin: 18px 0 12px 0; padding: 8px 16px; border-left: 4px solid #667eea; background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent); border-radius: 0 8px 8px 0;',
-                strong: 'color: #667eea; font-weight: 600; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); padding: 2px 4px; border-radius: 3px;',
-                em: 'color: #764ba2; font-style: italic;',
-                blockquote: 'margin: 18px 0; padding: 16px 24px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)); border-left: 4px solid #667eea; border-radius: 0 12px 12px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
-                code: 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: #667eea; padding: 3px 6px; border-radius: 6px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 90%; border: 1px solid rgba(102, 126, 234, 0.2);',
-                pre: 'background: linear-gradient(135deg, #2d3748, #4a5568) !important; color: #e2e8f0 !important; padding: 24px; border-radius: 12px; margin: 18px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.6; font-size: 14px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);',
-                a: 'color: #667eea; text-decoration: none; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent); padding: 1px 3px; border-radius: 3px;',
-                ul: 'margin: 14px 0; padding-left: 28px;',
-                ol: 'margin: 14px 0; padding-left: 28px;',
-                li: 'margin: 6px 8px; line-height: 1.7;'
-            },
-            'doocs-simple': {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333;',
-                h1: 'font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px auto 15px; padding: 8px 16px; border-bottom: 2px solid #3498db; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.05); display: table;',
-                h2: 'font-size: 20px; font-weight: bold; color: white; margin: 32px auto 16px; padding: 6px 20px; background: #3498db; border-radius: 8px 24px 8px 24px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: table;',
-                h3: 'font-size: 18px; font-weight: bold; color: #3498db; margin: 16px 0 12px 0; padding: 8px 12px; border-left: 4px solid #3498db; background: rgba(52, 152, 219, 0.08); border-radius: 6px; line-height: 2.4;',
-                strong: 'color: #3498db; font-weight: bold;',
-                em: 'color: #8e44ad; font-style: italic;',
-                blockquote: 'margin: 15px 0; padding: 16px 16px 16px 32px; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 6px; color: rgba(0,0,0,0.6); font-style: italic;',
-                code: 'background: rgba(27,31,35,.05); color: #d14; padding: 3px 5px; border-radius: 4px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 90%;',
-                pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5; font-size: 14px;',
-                a: 'color: #576b95; text-decoration: none;',
-                ul: 'list-style: none; margin: 12px 0; padding-left: 24px;',
-                ol: 'margin: 12px 0; padding-left: 24px;',
-                li: 'margin: 5px 8px; text-indent: -1em; display: block;'
-            },
-            'doocs-modern': {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; line-height: 1.7; color: #1a202c;',
-                h1: 'font-size: 28px; font-weight: 700; color: white; margin: 24px 0 18px 0; padding: 16px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);',
-                h2: 'font-size: 22px; font-weight: 600; color: #2d3748; margin: 20px 0 14px 0; padding: 12px 20px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-left: 4px solid #667eea; border-radius: 0 12px 12px 0;',
-                h3: 'font-size: 18px; font-weight: 600; color: #667eea; margin: 18px 0 12px 0; padding: 8px 16px; background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent); border-left: 4px solid #667eea; border-radius: 0 8px 8px 0;',
-                strong: 'color: #667eea; font-weight: 600; background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15)); padding: 2px 6px; border-radius: 4px;',
-                em: 'color: #764ba2; font-style: italic;',
-                blockquote: 'margin: 18px 0; padding: 18px 24px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)); border-left: 4px solid #667eea; border-radius: 0 16px 16px 0; color: #4a5568; font-style: italic; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);',
-                code: 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: #667eea; padding: 4px 8px; border-radius: 6px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 90%; border: 1px solid rgba(102, 126, 234, 0.2);',
-                pre: 'background: linear-gradient(135deg, #2d3748, #4a5568) !important; color: #e2e8f0 !important; padding: 24px; border-radius: 16px; margin: 20px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.6; font-size: 14px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);',
-                a: 'color: #667eea; text-decoration: none; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent); padding: 2px 4px; border-radius: 4px;',
-                ul: 'margin: 14px 0; padding-left: 28px;',
-                ol: 'margin: 14px 0; padding-left: 28px;',
-                li: 'margin: 6px 8px; line-height: 1.6;'
-            },
-            'mac-style': {
-                base: 'font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; line-height: 1.7; color: #4a5568;',
-                h1: 'font-size: 2em; font-weight: 600; color: #2d3748; margin: 1.5em 0 0.8em 0; padding-bottom: 0.3em; border-bottom: 2px solid #e2e8f0; line-height: 1.3;',
-                h2: 'font-size: 1.6em; font-weight: 600; color: #2d3748; margin: 1.5em 0 0.8em 0; padding-bottom: 0.2em; border-bottom: 1px solid #e2e8f0; line-height: 1.3;',
-                h3: 'font-size: 1.3em; font-weight: 600; color: #2d3748; margin: 1.5em 0 0.8em 0; line-height: 1.3;',
-                p: 'margin: 1em 0; line-height: 1.7; color: #4a5568;',
-                strong: 'color: #2d3748; font-weight: 600;',
-                em: 'color: #4a5568; font-style: italic;',
-                blockquote: 'border-left: 4px solid #4299e1; background: #f7fafc; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; color: #2d3748; font-style: italic;',
-                code: 'background: #edf2f7; color: #e53e3e; padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 0.9em;',
-                pre: 'background: #2d3748 !important; border: 1px solid #4a5568; border-radius: 8px; margin: 20px 0; overflow-x: auto; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 20px !important; color: #e2e8f0 !important; font-family: "SF Mono", Monaco, Menlo, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.6;',
-                a: 'color: #4299e1; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.3s ease;',
-                ul: 'padding-left: 2em; margin: 1em 0;',
-                ol: 'padding-left: 2em; margin: 1em 0;',
-                li: 'margin: 0.5em 0; line-height: 1.6; color: #4a5568;',
-                macHeader: 'content: ""; position: absolute; top: 0; left: 0; right: 0; height: 30px; background: linear-gradient(180deg, #f6f6f6 0%, #e8e8e8 100%); border-bottom: 1px solid #d0d0d0; z-index: 1;',
-                macButtons: 'content: ""; position: absolute; top: 9px; left: 12px; width: 12px; height: 12px; background: #ff5f57; border-radius: 50%; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #28ca42, 0 0 0 1px rgba(0, 0, 0, 0.1), 20px 0 0 1px rgba(0, 0, 0, 0.1), 40px 0 0 1px rgba(0, 0, 0, 0.1); z-index: 2;'
-            }
         };
         return styles[theme] || styles.wechat;
     }
@@ -603,7 +452,7 @@ ${content}</tr>
                     }
                     
                     // 微信主题和MAC风格主题特殊处理：使用SVG绘制红黄绿圆点（微信兼容版本）
-                    if (this.themeSelect.value === 'wechat' || this.themeSelect.value === 'mac-style') {
+                    if (this.themeSelect.value === 'wechat' || this.themeSelect.value === 'ai') {
                         // 重新构建整个pre结构，使用用户提供的样式
                         const codeContent = element.querySelector('code');
                         const codeText = codeContent ? codeContent.textContent : element.textContent;
@@ -619,7 +468,6 @@ ${content}</tr>
                         
                         // 创建新的结构 - 修复代码渲染样式
                         const newStructure = `
-                            <p style="font-size: 0px; line-height: 0; margin: 0px;">&nbsp;</p>
                             <section style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); color: rgb(10, 10, 10); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; text-align: left; line-height: 1.75; font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-size: 16px;">
                                 <pre class="hljs code__pre" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: -apple-system-font, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif; font-feature-settings: normal; font-variation-settings: normal; font-size: 14.4px; margin: 0px 8px 10px; color: rgb(173, 186, 199); background: rgb(34, 39, 46); text-align: left; line-height: 1.5; overflow-x: auto; border-radius: 8px; padding: 0px !important;">
                                     <span class="mac-sign" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); display: flex; padding: 10px 14px 0px;">
@@ -632,7 +480,6 @@ ${content}</tr>
                                     <code class="language-${language || 'html'}" style="box-sizing: border-box; border-width: 0px; border-style: solid; border-color: rgb(229, 229, 229); font-family: Menlo, &quot;Operator Mono&quot;, Consolas, Monaco, monospace; font-feature-settings: normal; font-variation-settings: normal; font-size: 12.96px; display: -webkit-box; padding: 0.5em 1em 1em; overflow-x: auto; text-indent: 0px; text-align: left; line-height: 1.75; margin: 0px; white-space: nowrap;">${codeText}</code>
                                 </pre>
                             </section>
-                            <p style="font-size: 0px; line-height: 0; margin: 0px;">&nbsp;</p>
                         `;
                         
                         // 替换原有的pre元素

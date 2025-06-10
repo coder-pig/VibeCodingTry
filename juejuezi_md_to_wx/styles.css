@@ -448,6 +448,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    /* 确保在微信公众号中正确显示 */
+    box-sizing: border-box;
+    height: auto;
+    min-height: 36px;
 }
 
 .mac-btn {
