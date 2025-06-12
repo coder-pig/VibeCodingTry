@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>裸眼3D图片生成器</title>
+    <!-- Google Fonts - 免费可商用中文字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@300;400;500;700&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=ZCOOL+KuaiLe&family=Liu+Jian+Mao+Cao&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题和简述 -->
+        <header class="compact-header">
+            <h1>🎨 裸眼3D图片生成器</h1>
+            <p>基于对比色图层叠加原理，创造视觉3D效果</p>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧操作栏 -->
+            <div class="sidebar-left">
+                <!-- 颜色组合选择 -->
+                <div class="control-section">
+                    <h3>🌈 对比色组合</h3>
+                    <div class="color-presets">
+                        <div class="preset active" data-bg="#0500FB" data-fg="#FE0191">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #0500FB;"></div>
+                                <div class="fg-color" style="background: #FE0191;"></div>
+                            </div>
+                            <span>抠腚男孩+粉红</span>
+                        </div>
+                        <div class="preset" data-bg="#0033FF" data-fg="#FF00FF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #0033FF;"></div>
+                                <div class="fg-color" style="background: #FF00FF;"></div>
+                            </div>
+                            <span>克莱因蓝+洋红</span>
+                        </div>
+                        <div class="preset" data-bg="#FF0000" data-fg="#00FFFF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #FF0000;"></div>
+                                <div class="fg-color" style="background: #00FFFF;"></div>
+                            </div>
+                            <span>红色+青色</span>
+                        </div>
+                        <div class="preset" data-bg="#00FF00" data-fg="#FF00FF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #00FF00;"></div>
+                                <div class="fg-color" style="background: #FF00FF;"></div>
+                            </div>
+                            <span>绿色+洋红</span>
+                        </div>
+                        <div class="preset" data-bg="#000000" data-fg="#FFFFFF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #000000;"></div>
+                                <div class="fg-color" style="background: #FFFFFF;"></div>
+                            </div>
+                            <span>黑白</span>
+                        </div>
+                        <div class="preset" data-bg="#FF6600" data-fg="#0099FF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #FF6600;"></div>
+                                <div class="fg-color" style="background: #0099FF;"></div>
+                            </div>
+                            <span>橙色+蓝色</span>
+                        </div>
+                        <div class="preset" data-bg="#9900CC" data-fg="#66FF33">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #9900CC;"></div>
+                                <div class="fg-color" style="background: #66FF33;"></div>
+                            </div>
+                            <span>紫色+绿色</span>
+                        </div>
+                        <div class="preset" data-bg="#FFFF00" data-fg="#6600FF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #FFFF00;"></div>
+                                <div class="fg-color" style="background: #6600FF;"></div>
+                            </div>
+                            <span>黄色+紫色</span>
+                        </div>
+                        <div class="preset" data-bg="#FF3366" data-fg="#33CCFF">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #FF3366;"></div>
+                                <div class="fg-color" style="background: #33CCFF;"></div>
+                            </div>
+                            <span>玫红+天蓝</span>
+                        </div>
+                        <div class="preset" data-bg="#0066FF" data-fg="#FF0066">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #0066FF;"></div>
+                                <div class="fg-color" style="background: #FF0066;"></div>
+                            </div>
+                            <span>深蓝+亮红</span>
+                        </div>
+                        <div class="preset" data-bg="#FF9900" data-fg="#0066CC">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #FF9900;"></div>
+                                <div class="fg-color" style="background: #0066CC;"></div>
+                            </div>
+                            <span>金橙+深蓝</span>
+                        </div>
+                        <div class="preset" data-bg="#CC0066" data-fg="#00FF99">
+                            <div class="color-preview">
+                                <div class="bg-color" style="background: #CC0066;"></div>
+                                <div class="fg-color" style="background: #00FF99;"></div>
+                            </div>
+                            <span>深红+薄荷绿</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自定义颜色 -->
+                <div class="control-section">
+                    <h3>🎯 自定义颜色</h3>
+                    <div class="color-inputs-flex">
+                        <div class="color-input">
+                            <label for="bgColor">背景色</label>
+                            <input type="color" id="bgColor" value="#0066ff">
+                        </div>
+                        <div class="color-input">
+                            <label for="bgTextColor">背景文字色</label>
+                            <input type="color" id="bgTextColor" value="#ffffff">
+                        </div>
+                        <div class="color-input">
+                            <label for="fgTextColor">前景文字色</label>
+                            <input type="color" id="fgTextColor" value="#ff0066">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 画布尺寸设置 -->
+                <div class="control-section">
+                    <h3>📐 画布尺寸</h3>
+                    <div class="size-presets">
+                        <button class="size-preset" data-width="640" data-height="360">16:9</button>
+                        <button class="size-preset" data-width="480" data-height="360">4:3</button>
+                        <button class="size-preset" data-width="360" data-height="480">3:4</button>
+                        <button class="size-preset" data-width="360" data-height="640">9:16</button>
+                    </div>
+                    <div class="custom-size">
+                        <div class="size-inputs">
+                            <div class="size-input">
+                                <label>宽:</label>
+                                <input type="number" id="canvasWidth" value="540" min="100" max="3000">
+                            </div>
+                            <div class="size-input">
+                                <label>高:</label>
+                                <input type="number" id="canvasHeight" value="960" min="100" max="3000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 全局设置 -->
+                <div class="control-section">
+                    <h3>🎛️ 全局设置</h3>
+                    <div class="control-group">
+                        <label>3D偏移:</label>
+                        <input type="range" id="offset" min="1" max="20" value="5">
+                        <span id="offsetValue">5px</span>
+                    </div>
+                    <div class="control-group">
+                        <label>透明度:</label>
+                        <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="0.8">
+                        <span id="opacityValue">0.8</span>
+                    </div>
+                </div>
+
+                <!-- 文字管理 -->
+                <div class="control-section">
+                    <h3>📝 文字管理</h3>
+                    <div class="text-manager">
+                        <div class="text-controls-grid">
+                            <div class="text-control-row">
+                                <button id="addTextBtn" class="btn small">➕ 添加文字</button>
+                                <button id="clearAllTextBtn" class="btn small secondary">🗑️ 清空所有</button>
+                                <select id="textLayerSelect">
+                                    <option value="bg">背景层</option>
+                                    <option value="fg">前景层</option>
+                                </select>
+                            </div>
+                            <div class="text-control-row">
+                                <label for="fontSelect" class="font-label">🎨 字体选择:</label>
+                                <select id="fontSelect" class="font-selector">
+                                    <option value="system">系统默认</option>
+                                    <option value="'Noto Sans SC', sans-serif">思源黑体</option>
+                                    <option value="'Noto Serif SC', serif">思源宋体</option>
+                                    <option value="'Ma Shan Zheng', cursive">马善政楷体</option>
+                                    <option value="'ZCOOL XiaoWei', serif">站酷小薇</option>
+                                    <option value="'ZCOOL KuaiLe', cursive">站酷快乐体</option>
+                                    <option value="'Liu Jian Mao Cao', cursive">刘建毛草</option>
+                                    <option value="'Zhi Mang Xing', cursive">志芒星</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="textList" class="text-list">
+                            <!-- 文字项目将动态添加到这里 -->
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- 操作按钮 -->
+                <div class="control-section">
+                    <div class="actions">
+                        <button id="downloadBtn" class="btn primary">💾 下载图片</button>
+                        <button id="resetBtn" class="btn secondary">🔄 重置</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧预览区域 -->
+            <div class="preview-section">
+                <h3>👀 预览效果</h3>
+                <div id="canvas-container">
+                    <canvas id="previewCanvas" width="540" height="960"></canvas>
+                </div>
+                <div class="preview-tips">
+                    <p>💡 提示：戴上红蓝3D眼镜观看效果更佳</p>
+                    <p>🔍 也可以通过调整眼睛焦距来观看裸眼3D效果</p>
+                </div>
+            </div>
+         </div>
+     </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

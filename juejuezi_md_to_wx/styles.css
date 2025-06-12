@@ -625,7 +625,7 @@ body {
     font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
     line-height: 1.75;
     color: #333;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     padding: 0 1.0em;
     text-align: justify;
     background-color: #ffffff;
@@ -639,7 +639,7 @@ body {
     margin: 22px 0 18px 0;
     padding-bottom: 12px;
     border-bottom: 2px solid #5a78ea;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     line-height: 1.75;
     text-align: center;
 }
@@ -652,7 +652,7 @@ body {
     color: #5a78ea;
     margin: 20px 0 15px 0;
     padding: 10px 0;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     line-height: 1.75;
     text-align: center;
 }
@@ -685,7 +685,7 @@ body {
     font-weight: bold;
     color: #5a78ea;
     margin: 16px 0 10px 0;
-    letter-spacing: 0.544px;
+    letter-spacing: 1.5px;
     line-height: 1.75;
     text-align: center;
     position: relative;
@@ -707,7 +707,7 @@ body {
     text-align: justify;
     font-size: 15px;
     line-height: 1.75;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .ai-theme strong {
@@ -737,14 +737,14 @@ body {
     padding-left: 25px;
     font-size: 15px;
     line-height: 1.75;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .ai-theme li {
     margin: 5px 0;
     font-size: 15px;
-    line-height: 1.2;
-    letter-spacing: 1px;
+    line-height: 1.75;
+    letter-spacing: 1.5px;
 }
 
 .ai-theme code {
@@ -808,6 +808,198 @@ body {
 }
 
 .ai-theme .hljs {
+    background: transparent !important;
+    color: inherit !important;
+}
+
+/* 读书笔记主题样式 */
+.reading-notes-theme {
+    font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    line-height: 1.75;
+    color: #333;
+    letter-spacing: 1.5px;
+    padding: 0 1.0em;
+    text-align: justify;
+    background-color: #ffffff;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+    background-position: 0 0;
+}
+
+/* 读书笔记主题 h1 样式 */
+.reading-notes-theme h1 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 22px 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ff6b35;
+    letter-spacing: 1.5px;
+    line-height: 1.75;
+    text-align: center;
+}
+
+/* 读书笔记主题 h2 样式 */
+.reading-notes-theme h2 {
+    position: relative;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff6b35;
+    margin: 20px 0 15px 0;
+    padding: 10px 0;
+    letter-spacing: 1.5px;
+    line-height: 1.75;
+    text-align: center;
+}
+
+.reading-notes-theme h2::before {
+    content: "📖";
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    font-size: 20px;
+}
+
+.reading-notes-theme h2::after {
+    content: "";
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: 2px;
+    background-color: #ff6b35;
+    margin: 5px auto 0;
+}
+
+/* 读书笔记主题 h3 样式 */
+.reading-notes-theme h3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff6b35;
+    margin: 16px 0 10px 0;
+    letter-spacing: 1.5px;
+    line-height: 1.75;
+    text-align: center;
+    position: relative;
+}
+
+.reading-notes-theme h3::before {
+    content: "📝";
+    margin-right: 8px;
+}
+
+.reading-notes-theme h3::after {
+    content: "📝";
+    margin-left: 8px;
+}
+
+/* 读书笔记主题其他元素样式 */
+.reading-notes-theme p {
+    margin: 12px 0;
+    text-align: justify;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1.5px;
+}
+
+.reading-notes-theme strong {
+    color: #5a78ea;
+    font-weight: bold;
+}
+
+.reading-notes-theme em {
+    color: #ff6b35;
+    font-style: italic;
+}
+
+.reading-notes-theme blockquote {
+    margin: 15px 0;
+    padding: 15px 20px;
+    background: #fff7ed;
+    border-left: 4px solid #ff6b35;
+    border-radius: 0 8px 8px 0;
+    color: #555;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+}
+
+.reading-notes-theme ul, .reading-notes-theme ol {
+    margin: 12px 0;
+    padding-left: 25px;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1.5px;
+}
+
+.reading-notes-theme li {
+    margin: 5px 0;
+    font-size: 15px;
+    line-height: 1.75;
+    letter-spacing: 1.5px;
+}
+
+.reading-notes-theme code {
+    background: #fef3c7;
+    color: #ff6b35;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+}
+
+/* 读书笔记主题使用Mac风格代码块 */
+.reading-notes-theme pre {
+    /* 移除默认样式，由Mac风格代码块提供样式 */
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 15px 0;
+    overflow: visible;
+    position: relative;
+}
+
+.reading-notes-theme pre code {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-family: inherit !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 确保读书笔记主题中的Mac风格代码块正确显示 */
+.reading-notes-theme .mac-style-code-block {
+    margin: 15px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.reading-notes-theme a {
+    color: #ff6b35;
+    text-decoration: none;
+    border-bottom: 1px solid #ff6b35;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.reading-notes-theme a:hover {
+    color: #e55a2b;
+    border-bottom-color: #e55a2b;
+}
+
+/* 确保hljs样式不被覆盖 */
+.reading-notes-theme pre code.hljs {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.reading-notes-theme .hljs {
     background: transparent !important;
     color: inherit !important;
 }

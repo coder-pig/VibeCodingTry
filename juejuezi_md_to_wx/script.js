@@ -76,7 +76,7 @@ class MarkdownConverter {
                 style="font-size: 12px;color: rgba(74, 71, 71, 0.59);box-sizing: border-box;">${href}</span>
         </p>
     </li>
-</ul>`;
+</ul><br>`;
             }
             
             // 默认样式
@@ -268,7 +268,20 @@ ${content}</tr>
             const markdownText = this.markdownInput.value;
             const html = marked.parse(markdownText);
             const cleanHtml = DOMPurify.sanitize(html);
-            this.preview.innerHTML = cleanHtml;
+            
+            // 检查当前主题
+            const currentTheme = this.themeSelect.value;
+            
+            // 如果是AI主题，添加背景图片
+            if (currentTheme === 'ai') {
+                // 添加背景图片的section元素
+                const backgroundSection = `<section style="background-image: url('https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506101715264.webp'); visibility: visible; margin-bottom: 0px;" data-mpa-powered-by="yiban.io" data-lazy-bgimg="https://mmbiz.qpic.cn/mmbiz_jpg/GoRPyTxk6kAXABbdl7gBH9c3sdicvLYf89k5Za31LIYaxBcialiaDTnJOibpGaWJ5PuCYQbv5M5FMiaMrzhUxAfuvzw/640?wx_fmt=jpeg" class="" data-fail="0">
+${cleanHtml}
+</section>`;
+                this.preview.innerHTML = backgroundSection;
+            } else {
+                this.preview.innerHTML = cleanHtml;
+            }
             
             // 代码高亮
             this.preview.querySelectorAll('pre code').forEach((block) => {
@@ -351,7 +364,8 @@ ${content}</tr>
         // 移除所有主题类
         const themeClasses = [
             'wechat-theme',
-            'ai-theme'
+            'ai-theme',
+            'reading-notes-theme'
         ];
         
         themeClasses.forEach(cls => {
@@ -380,8 +394,8 @@ ${content}</tr>
                 h2: 'font-size: 20px; font-weight: 600; color: #2c3e50; margin: 18px 0 12px 0; padding-left: 15px; border-left: 5px solid #3498db;',
                 h3: 'font-size: 18px; font-weight: 600; color: #34495e; margin: 16px 0 10px 0;',
                 p: 'margin: 12px 0; text-align: justify;',
-                strong: 'color: #e74c3c; font-weight: bold;',
-                em: 'color: #8e44ad; font-style: italic;',
+                strong: 'color: #e74c3c; font-weight: bold; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
+                em: 'color: #8e44ad; font-style: italic; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
                 blockquote: 'margin: 15px 0; padding: 15px 20px; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 0 8px 8px 0; color: #555;',
                 code: 'background: #f1f2f6; color: #e74c3c; padding: 2px 6px; border-radius: 4px; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; font-size: 0.9em;',
                 pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: Monaco, Menlo, "Ubuntu Mono", monospace; line-height: 1.5;',
@@ -391,20 +405,36 @@ ${content}</tr>
                 li: 'margin: 5px 0;'
             },
             ai: {
-                base: 'font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333; letter-spacing: 1px; padding: 0 1.0em; text-align: justify; background-color: #ffffff;',
-                h1: 'font-size: 20px; font-weight: bold; color: #2c3e50; margin: 22px 0 18px 0; padding-bottom: 12px; border-bottom: 2px solid #5a78ea; letter-spacing: 1px; line-height: 1.75; text-align: center;',
-                h2: 'position: relative; font-size: 20px; font-weight: bold; color: #5a78ea; margin: 20px 0 15px 0; padding: 10px 0; letter-spacing: 1px; line-height: 1.75; text-align: center;',
-                h3: 'font-size: 16px; font-weight: bold; color: #5a78ea; margin: 16px 0 10px 0; letter-spacing: 0.544px; line-height: 1.75; text-align: center; position: relative;',
-                p: 'margin: 12px 0; text-align: justify; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
-                strong: 'color: #e74c3c; font-weight: bold;',
-                em: 'color: #8e44ad; font-style: italic;',
+                base: 'font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333; letter-spacing: 1.5px; padding: 0 1.0em; text-align: justify; background-color: #ffffff;',
+                h1: 'font-size: 20px; font-weight: bold; color: #2c3e50; margin: 22px 0 18px 0; padding-bottom: 12px; border-bottom: 2px solid #5a78ea; letter-spacing: 1.5px; line-height: 1.75; text-align: center;',
+                h2: 'position: relative; font-size: 20px; font-weight: bold; color: #5a78ea; margin: 20px 0 15px 0; padding: 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center;',
+                h3: 'font-size: 16px; font-weight: bold; color: #5a78ea; margin: 16px 0 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center; position: relative;',
+                p: 'margin: 12px 0; text-align: justify; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                strong: 'color: #e74c3c; font-weight: bold; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
+                em: 'color: #8e44ad; font-style: italic; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
                 blockquote: 'margin: 15px 0; padding: 15px 20px; background: #f8f9fa; border-left: 4px solid #5a78ea; border-radius: 0 8px 8px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
                 code: 'background: #f1f2f6; color: #e74c3c; padding: 2px 6px; border-radius: 4px; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; font-size: 15px; letter-spacing: 0.5px;',
                 pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; line-height: 1.5; position: relative;',
                 a: 'color: #5a78ea; text-decoration: none; border-bottom: 1px solid #5a78ea; font-size: 15px; letter-spacing: 0.5px; transition: all 0.3s ease;',
-                ul: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
-                ol: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1px;',
-                li: 'margin: 5px 0; font-size: 15px; line-height: 1.2; letter-spacing: 1px;'
+                ul: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                ol: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                li: 'margin: 5px 0; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;'
+            },
+            'reading-notes': {
+                base: 'font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif; line-height: 1.75; color: #333; letter-spacing: 1.5px; padding: 0 1.0em; text-align: justify; background-color: #ffffff; background-image: radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.15) 1px, transparent 0); background-size: 20px 20px; background-position: 0 0;',
+                h1: 'font-size: 20px; font-weight: bold; color: #2c3e50; margin: 22px 0 18px 0; padding-bottom: 12px; border-bottom: 2px solid #ff6b35; letter-spacing: 1.5px; line-height: 1.75; text-align: center;',
+                h2: 'position: relative; font-size: 20px; font-weight: bold; color: #ff6b35; margin: 20px 0 15px 0; padding: 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center;',
+                h3: 'font-size: 16px; font-weight: bold; color: #ff6b35; margin: 16px 0 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center; position: relative;',
+                p: 'margin: 12px 0; text-align: justify; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                strong: 'color: #5a78ea; font-weight: bold; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
+                em: 'color: #ff6b35; font-style: italic; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
+                blockquote: 'margin: 15px 0; padding: 15px 20px; background: #fff7ed; border-left: 4px solid #ff6b35; border-radius: 0 8px 8px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
+                code: 'background: #fef3c7; color: #ff6b35; padding: 2px 6px; border-radius: 4px; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; font-size: 15px; letter-spacing: 0.5px;',
+                pre: 'background: #2d3748 !important; color: #e2e8f0 !important; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; line-height: 1.5; position: relative;',
+                a: 'color: #ff6b35; text-decoration: none; border-bottom: 1px solid #ff6b35; font-size: 15px; letter-spacing: 0.5px; transition: all 0.3s ease;',
+                ul: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                ol: 'margin: 12px 0; padding-left: 25px; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
+                li: 'margin: 5px 0; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;'
             },
         };
         return styles[theme] || styles.wechat;
@@ -414,9 +444,41 @@ ${content}</tr>
      * 将HTML内容转换为带内联样式的HTML
      */
     convertToInlineStyles(htmlContent) {
+        const currentTheme = this.themeSelect.value;
+        
+        // 根据主题添加不同的开头内容
+        let headerContent = '';
+        
+        if (currentTheme === 'reading-notes') {
+            // 读书笔记主题使用图片开头
+            headerContent = '<section style="visibility: visible; text-align: center; margin-bottom: 20px;"><img src="https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506111700614.jpeg" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" /></section>';
+        } else {
+            // 其他主题使用原来的headerSection
+            headerContent = '<section style="visibility: visible;"><section style="white-space: normal; max-width: 100%; min-height: 1em; color: rgb(51, 51, 51); text-align: center; visibility: visible;"><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">（给</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 128, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">抠腚男孩👦</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">加星标，提升</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 100, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;"><strong style="visibility: visible;">🤖AI</strong></span><span style="max-width: 100%; white-space: pre-wrap; color: rgb(255, 41, 65); font-size: 14px; line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">技能）</span></section></section>';
+        }
+        
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlContent;
+        // 将开头内容添加到内容开头
+        tempDiv.innerHTML = headerContent + htmlContent;
         const styles = this.getInlineStyles();
+
+        // 如果是AI主题，需要添加背景图片
+        if (currentTheme === 'ai' || currentTheme == "reading-notes") {
+            // 创建背景section元素
+            const backgroundSection = document.createElement('section');
+            backgroundSection.style.cssText = "background-image: url('https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506101715264.webp'); visibility: visible; margin-bottom: 0px;";
+            backgroundSection.setAttribute('data-mpa-powered-by', 'yiban.io');
+            backgroundSection.setAttribute('data-lazy-bgimg', 'https://mmbiz.qpic.cn/mmbiz_jpg/GoRPyTxk6kAXABbdl7gBH9c3sdicvLYf89k5Za31LIYaxBcialiaDTnJOibpGaWJ5PuCYQbv5M5FMiaMrzhUxAfuvzw/640?wx_fmt=jpeg');
+            backgroundSection.setAttribute('data-fail', '0');
+            
+            // 将原内容移动到背景section中
+            while (tempDiv.firstChild) {
+                backgroundSection.appendChild(tempDiv.firstChild);
+            }
+            
+            // 将背景section添加到tempDiv
+            tempDiv.appendChild(backgroundSection);
+        }
 
         // 应用基础样式到容器
         tempDiv.style.cssText = styles.base;
@@ -438,11 +500,37 @@ ${content}</tr>
             'li': styles.li
         };
 
+        // 特殊处理：将列表项中的strong元素和后续内容合并到同一个section中
+        const listItems = tempDiv.querySelectorAll('li');
+        listItems.forEach(li => {
+            const strongElement = li.querySelector('strong');
+            if (strongElement) {
+                // 创建一个新的section来包装所有内容
+                const wrapperSection = document.createElement('section');
+                
+                // 将li的所有子节点移动到新的section中
+                while (li.firstChild) {
+                    wrapperSection.appendChild(li.firstChild);
+                }
+                
+                // 将新的section添加回li中
+                li.appendChild(wrapperSection);
+            }
+        });
+
         Object.keys(elements).forEach(tag => {
             const tagElements = tempDiv.querySelectorAll(tag);
             tagElements.forEach(element => {
                 if (elements[tag]) {
                     element.style.cssText = elements[tag];
+                }
+                // 特殊处理strong和em元素内部的所有子元素，确保它们都是内联显示
+                if (tag === 'strong' || tag === 'em') {
+                    const allChildren = element.querySelectorAll('*');
+                    allChildren.forEach(child => {
+                        const currentStyle = child.style.cssText;
+                        child.style.cssText = currentStyle + '; display: inline !important;';
+                    });
                 }
                 // 特殊处理pre中的code
                 if (tag === 'pre') {
@@ -452,7 +540,7 @@ ${content}</tr>
                     }
                     
                     // 微信主题和MAC风格主题特殊处理：使用SVG绘制红黄绿圆点（微信兼容版本）
-                    if (this.themeSelect.value === 'wechat' || this.themeSelect.value === 'ai') {
+                    if (this.themeSelect.value === 'wechat' || this.themeSelect.value === 'ai' || this.themeSelect.value === 'reading-notes') {
                         // 重新构建整个pre结构，使用用户提供的样式
                         const codeContent = element.querySelector('code');
                         const codeText = codeContent ? codeContent.textContent : element.textContent;
@@ -506,10 +594,28 @@ ${content}</tr>
                         element.innerHTML = '// ' + element.innerHTML + ' //';
                     }
                 }
+                
+                // 特殊处理读书笔记主题的h2和h3元素，添加emoji
+                if (this.themeSelect.value === 'reading-notes') {
+                    // 处理h2元素，添加书本emoji
+                    if (tag === 'h2') {
+                        // 在文本前添加书本emoji
+                        element.innerHTML = '📖 ' + element.innerHTML;
+                    }
+                    
+                    // 处理h3元素，添加前后的笔记emoji
+                    if (tag === 'h3') {
+                        // 在文本前后添加笔记emoji
+                        element.innerHTML = '📝 ' + element.innerHTML + ' 📝';
+                    }
+                }
             });
         });
 
-        return tempDiv.outerHTML;
+        // 在生成样式代码的最后添加EOF标记
+        const eofSection = '<p style="white-space: normal;font-variant-ligatures: normal;orphans: 2;widows: 2;text-align: center;"><span style="font-size: 15px;color: rgb(136, 136, 136);">- EOF -</span></p>';
+        
+        return tempDiv.outerHTML + eofSection;
     }
 
     /**
