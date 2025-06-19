@@ -613,7 +613,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
     render(ctx) {
         // 绘制射程圆圈（仅在选中时显示）
         if (this.selected && this.range > 0) {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeStyle = 'rgb(201, 24, 24)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
@@ -1570,15 +1570,6 @@ TowerDefense.Systems.UIManager = class {
      * 设置事件监听器
      */
     setupEventListeners() {
-        // 塔建造按钮（已移除，改为弹窗选择）
-        // const towerButtons = document.querySelectorAll('.tower-btn');
-        // towerButtons.forEach(btn => {
-        //     btn.addEventListener('click', (e) => {
-        //         const towerType = btn.dataset.tower;
-        //         this.selectTowerType(towerType);
-        //     });
-        // });
-        
         // 游戏控制按钮
         const pauseBtn = document.getElementById('pauseBtn');
         if (pauseBtn) {
@@ -1642,14 +1633,6 @@ TowerDefense.Systems.UIManager = class {
     }
 
     /**
-     * 选择塔类型（已废弃，改为弹窗选择）
-     */
-    selectTowerType(towerType) {
-        // 此方法已不再使用，改为弹窗选择塔类型
-        console.log('selectTowerType方法已废弃，请使用弹窗选择塔');
-    }
-
-    /**
      * 选择塔
      */
     selectTower(tower) {
@@ -1665,8 +1648,6 @@ TowerDefense.Systems.UIManager = class {
         } else {
             this.hideTowerInfo();
         }
-        
-        // 塔类型选择已改为弹窗模式，无需处理按钮状态
     }
 
     /**
@@ -2102,7 +2083,14 @@ TowerDefense.Systems.UIManager = class {
         // 先隐藏其他弹窗
         this.hideTowerSelectionModal();
         
+        // 清除之前选中的塔的状态
+        if (this.modalSelectedTower && this.modalSelectedTower !== tower) {
+            this.modalSelectedTower.selected = false;
+        }
+        
         this.modalSelectedTower = tower;
+        // 设置当前塔为选中状态
+        tower.selected = true;
         
         const modal = document.getElementById('towerInfoModal');
         if (!modal) {
@@ -2147,6 +2135,11 @@ TowerDefense.Systems.UIManager = class {
         const modal = document.getElementById('towerInfoModal');
         if (modal) {
             modal.style.display = 'none';
+        }
+        
+        // 清除塔的选中状态
+        if (this.modalSelectedTower) {
+            this.modalSelectedTower.selected = false;
         }
         this.modalSelectedTower = null;
     }
