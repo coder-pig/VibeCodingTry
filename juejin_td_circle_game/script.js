@@ -51,8 +51,8 @@ TowerDefense.Utils = {
      * 检查点是否在矩形内
      */
     pointInRect(x, y, rect) {
-        return x >= rect.x && x <= rect.x + rect.width &&
-               y >= rect.y && y <= rect.y + rect.height;
+        return x >= rect.x && x < rect.x + rect.width &&
+               y >= rect.y && y < rect.y + rect.height;
     }
 };
 
@@ -897,6 +897,42 @@ TowerDefense.Systems.MapSystem = class {
         
         return { canBuild: false };
     }
+
+    /**
+     * 获取点击位置的格子信息
+     */
+    getGridAt(x, y) {
+        for (let area of this.mapData.buildableAreas) {
+            if (TowerDefense.Utils.pointInRect(x, y, area)) {
+                return {
+                    isValidGrid: true,
+                    gridX: area.gridX,
+                    gridY: area.gridY,
+                    buildX: area.x + area.width / 2,
+                    buildY: area.y + area.height / 2
+                };
+            }
+        }
+        
+        return { isValidGrid: false };
+    }
+
+    /**
+     * 获取指定格子位置的塔
+     */
+    getTowerAtGrid(gridX, gridY) {
+        const area = this.mapData.buildableAreas.find(area => 
+            area.gridX === gridX && area.gridY === gridY
+        );
+        
+        if (!area) return null;
+        
+        return TowerDefense.Engine.Game.instance.towers.find(tower => 
+            tower.active && 
+            tower.x >= area.x && tower.x <= area.x + area.width &&
+            tower.y >= area.y && tower.y <= area.y + area.height
+        ) || null;
+    }
 };
 
 /**
@@ -1057,21 +1093,26 @@ TowerDefense.Systems.UIManager = class {
     constructor() {
         this.selectedTowerType = null;
         this.selectedTower = null;
+        this.modalBuildX = 0;
+        this.modalBuildY = 0;
+        this.modalSelectedTower = null;
         this.setupEventListeners();
+        this.createTowerSelectionModal();
+        this.createTowerInfoModal();
     }
 
     /**
      * 设置事件监听器
      */
     setupEventListeners() {
-        // 塔建造按钮
-        const towerButtons = document.querySelectorAll('.tower-btn');
-        towerButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const towerType = btn.dataset.tower;
-                this.selectTowerType(towerType);
-            });
-        });
+        // 塔建造按钮（已移除，改为弹窗选择）
+        // const towerButtons = document.querySelectorAll('.tower-btn');
+        // towerButtons.forEach(btn => {
+        //     btn.addEventListener('click', (e) => {
+        //         const towerType = btn.dataset.tower;
+        //         this.selectTowerType(towerType);
+        //     });
+        // });
         
         // 游戏控制按钮
         const pauseBtn = document.getElementById('pauseBtn');
@@ -1136,24 +1177,11 @@ TowerDefense.Systems.UIManager = class {
     }
 
     /**
-     * 选择塔类型
+     * 选择塔类型（已废弃，改为弹窗选择）
      */
     selectTowerType(towerType) {
-        // 取消之前的选择
-        document.querySelectorAll('.tower-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        if (this.selectedTowerType === towerType) {
-            // 取消选择
-            this.selectedTowerType = null;
-        } else {
-            // 选择新类型
-            this.selectedTowerType = towerType;
-            document.querySelector(`[data-tower="${towerType}"]`).classList.add('selected');
-        }
-        
-        this.deselectTower();
+        // 此方法已不再使用，改为弹窗选择塔类型
+        console.log('selectTowerType方法已废弃，请使用弹窗选择塔');
     }
 
     /**
@@ -1173,11 +1201,7 @@ TowerDefense.Systems.UIManager = class {
             this.hideTowerInfo();
         }
         
-        // 取消塔类型选择
-        this.selectedTowerType = null;
-        document.querySelectorAll('.tower-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
+        // 塔类型选择已改为弹窗模式，无需处理按钮状态
     }
 
     /**
@@ -1259,19 +1283,8 @@ TowerDefense.Systems.UIManager = class {
         }
         if (scoreEl) scoreEl.textContent = `🏆 ${game.score}`;
         
-        // 更新塔建造按钮状态
-        document.querySelectorAll('.tower-btn').forEach(btn => {
-            const towerType = btn.dataset.tower;
-            const cost = TowerDefense.Data.TowerConfig[towerType].cost;
-            
-            if (game.gold < cost) {
-                btn.classList.add('disabled');
-                btn.disabled = true;
-            } else {
-                btn.classList.remove('disabled');
-                btn.disabled = false;
-            }
-        });
+        // 塔建造按钮状态更新已移除，改为弹窗选择模式
+        // 按钮状态在弹窗显示时动态更新
         
         // 更新塔信息面板
         if (this.selectedTower) {
@@ -1296,6 +1309,409 @@ TowerDefense.Systems.UIManager = class {
                 damageEl.parentNode.removeChild(damageEl);
             }
         }, 1000);
+    }
+
+    /**
+     * 创建塔选择弹窗
+     */
+    createTowerSelectionModal() {
+        // 创建弹窗容器
+        const modal = document.createElement('div');
+        modal.id = 'towerSelectionModal';
+        modal.className = 'tower-selection-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        `;
+        
+        // 创建标题
+        const title = document.createElement('h3');
+        title.textContent = '🏗️ 选择要建造的塔';
+        title.style.cssText = `
+            color: #FFD700;
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        `;
+        modal.appendChild(title);
+        
+        // 创建塔选择按钮容器
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        `;
+        
+        // 为每种塔类型创建按钮
+        const towerTypes = ['arrow', 'cannon', 'ice', 'poison'];
+        towerTypes.forEach(towerType => {
+            const config = TowerDefense.Data.TowerConfig[towerType];
+            const button = document.createElement('button');
+            button.className = 'modal-tower-btn';
+            button.dataset.tower = towerType;
+            button.innerHTML = `
+                <div style="font-size: 24px; margin-bottom: 5px;">${config.icon}</div>
+                <div style="font-size: 14px; font-weight: bold;">${config.name}</div>
+                <div style="font-size: 12px; color: #FFD700;">💰 ${config.cost}</div>
+            `;
+            button.style.cssText = `
+                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                border: 2px solid #555;
+                border-radius: 10px;
+                color: white;
+                padding: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: center;
+                min-width: 120px;
+            `;
+            
+            // 添加悬停效果
+            button.addEventListener('mouseenter', () => {
+                button.style.borderColor = '#FFD700';
+                button.style.transform = 'scale(1.05)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.borderColor = '#555';
+                button.style.transform = 'scale(1)';
+            });
+            
+            // 添加点击事件
+            button.addEventListener('click', () => {
+                this.buildTowerFromModal(towerType);
+            });
+            
+            buttonContainer.appendChild(button);
+        });
+        
+        modal.appendChild(buttonContainer);
+        
+        // 创建取消按钮
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '❌ 取消';
+        cancelButton.style.cssText = `
+            background: #666;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+        `;
+        
+        cancelButton.addEventListener('click', () => {
+            this.hideTowerSelectionModal();
+        });
+        
+        modal.appendChild(cancelButton);
+        
+        // 添加到页面
+        document.body.appendChild(modal);
+        
+        // 点击弹窗外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideTowerSelectionModal();
+            }
+        });
+    }
+
+    /**
+     * 显示塔选择弹窗
+     */
+    showTowerSelectionModal(buildX, buildY) {
+        // 先隐藏其他弹窗
+        this.hideTowerInfoModal();
+        
+        this.modalBuildX = buildX;
+        this.modalBuildY = buildY;
+        
+        const modal = document.getElementById('towerSelectionModal');
+        if (modal) {
+            modal.style.display = 'block';
+            
+            // 更新按钮状态（根据金币数量）
+            const game = TowerDefense.Engine.Game.instance;
+            modal.querySelectorAll('.modal-tower-btn').forEach(btn => {
+                const towerType = btn.dataset.tower;
+                const cost = TowerDefense.Data.TowerConfig[towerType].cost;
+                
+                if (game.gold < cost) {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.disabled = true;
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.disabled = false;
+                }
+            });
+        }
+    }
+
+    /**
+     * 隐藏塔选择弹窗
+     */
+    hideTowerSelectionModal() {
+        const modal = document.getElementById('towerSelectionModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    /**
+     * 从弹窗建造塔
+     */
+    buildTowerFromModal(towerType) {
+        const game = TowerDefense.Engine.Game.instance;
+        const config = TowerDefense.Data.TowerConfig[towerType];
+        
+        if (game.gold >= config.cost) {
+            game.buildTower(towerType, this.modalBuildX, this.modalBuildY);
+            this.hideTowerSelectionModal();
+        }
+    }
+
+    /**
+     * 创建塔信息弹窗
+     */
+    createTowerInfoModal() {
+        // 创建弹窗容器
+        const modal = document.createElement('div');
+        modal.id = 'towerInfoModal';
+        modal.className = 'tower-info-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #4CAF50;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+            min-width: 300px;
+        `;
+        
+        // 创建标题
+        const title = document.createElement('h3');
+        title.id = 'modalTowerTitle';
+        title.style.cssText = `
+            color: #4CAF50;
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        `;
+        modal.appendChild(title);
+        
+        // 创建塔信息容器
+        const infoContainer = document.createElement('div');
+        infoContainer.style.cssText = `
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        `;
+        
+        infoContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>🏆 等级: <span id="modalTowerLevel">1</span></div>
+                <div>⚔️ 伤害: <span id="modalTowerDamage">10</span></div>
+                <div>🎯 射程: <span id="modalTowerRange">100</span></div>
+                <div>⚡ 攻速: <span id="modalTowerSpeed">1.0</span></div>
+            </div>
+        `;
+        
+        modal.appendChild(infoContainer);
+        
+        // 创建按钮容器
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        `;
+        
+        // 创建升级按钮
+        const upgradeButton = document.createElement('button');
+        upgradeButton.id = 'modalUpgradeBtn';
+        upgradeButton.style.cssText = `
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        `;
+        
+        upgradeButton.addEventListener('click', () => {
+            this.upgradeTowerFromModal();
+        });
+        
+        buttonContainer.appendChild(upgradeButton);
+        
+        // 创建出售按钮
+        const sellButton = document.createElement('button');
+        sellButton.id = 'modalSellBtn';
+        sellButton.style.cssText = `
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        `;
+        
+        sellButton.addEventListener('click', () => {
+            this.sellTowerFromModal();
+        });
+        
+        buttonContainer.appendChild(sellButton);
+        
+        modal.appendChild(buttonContainer);
+        
+        // 创建关闭按钮
+        const closeButton = document.createElement('button');
+        closeButton.textContent = '❌ 关闭';
+        closeButton.style.cssText = `
+            background: #666;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+        `;
+        
+        closeButton.addEventListener('click', () => {
+            this.hideTowerInfoModal();
+        });
+        
+        modal.appendChild(closeButton);
+        
+        // 添加到页面
+        document.body.appendChild(modal);
+        
+        // 点击弹窗外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideTowerInfoModal();
+            }
+        });
+    }
+
+    /**
+     * 显示塔信息弹窗
+     */
+    showTowerInfoModal(tower) {
+        // 先隐藏其他弹窗
+        this.hideTowerSelectionModal();
+        
+        this.modalSelectedTower = tower;
+        
+        const modal = document.getElementById('towerInfoModal');
+        if (!modal) {
+            this.createTowerInfoModal();
+        }
+        
+        // 更新塔信息
+        const config = tower.config;
+        document.getElementById('modalTowerTitle').textContent = `${config.icon} ${config.name}`;
+        document.getElementById('modalTowerLevel').textContent = tower.level;
+        document.getElementById('modalTowerDamage').textContent = tower.damage;
+        document.getElementById('modalTowerRange').textContent = tower.range;
+        document.getElementById('modalTowerSpeed').textContent = tower.attackSpeed.toFixed(1);
+        
+        // 更新升级按钮
+        const upgradeBtn = document.getElementById('modalUpgradeBtn');
+        if (tower.level >= 4) {
+            upgradeBtn.textContent = '🏆 已满级';
+            upgradeBtn.disabled = true;
+            upgradeBtn.style.opacity = '0.5';
+        } else {
+            const upgradeCost = config.upgrades.cost[tower.level - 1];
+            upgradeBtn.textContent = `⬆️ 升级 (💰 ${upgradeCost})`;
+            const game = TowerDefense.Engine.Game.instance;
+            upgradeBtn.disabled = game.gold < upgradeCost;
+            upgradeBtn.style.opacity = upgradeBtn.disabled ? '0.5' : '1';
+        }
+        
+        // 更新出售按钮
+        const sellBtn = document.getElementById('modalSellBtn');
+        const sellPrice = Math.floor(config.cost * 0.7 * tower.level);
+        sellBtn.textContent = `💸 出售 (💰 ${sellPrice})`;
+        
+        // 显示弹窗
+        document.getElementById('towerInfoModal').style.display = 'block';
+    }
+
+    /**
+     * 隐藏塔信息弹窗
+     */
+    hideTowerInfoModal() {
+        const modal = document.getElementById('towerInfoModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        this.modalSelectedTower = null;
+    }
+
+    /**
+     * 从弹窗升级塔
+     */
+    upgradeTowerFromModal() {
+        if (this.modalSelectedTower) {
+            const game = TowerDefense.Engine.Game.instance;
+            const tower = this.modalSelectedTower;
+            const config = tower.config;
+            
+            if (tower.level < 4) {
+                const upgradeCost = config.upgrades.cost[tower.level - 1];
+                if (game.gold >= upgradeCost) {
+                    game.gold -= upgradeCost;
+                    tower.upgrade();
+                    this.showTowerInfoModal(tower); // 刷新弹窗信息
+                    this.updateResourceDisplay();
+                }
+            }
+        }
+    }
+
+    /**
+     * 从弹窗出售塔
+     */
+    sellTowerFromModal() {
+        if (this.modalSelectedTower) {
+            const game = TowerDefense.Engine.Game.instance;
+            const tower = this.modalSelectedTower;
+            const sellPrice = Math.floor(tower.config.cost * 0.7 * tower.level);
+            
+            game.gold += sellPrice;
+            tower.active = false;
+            
+            this.hideTowerInfoModal();
+            this.updateResourceDisplay();
+        }
     }
 };
 
@@ -1338,27 +1754,37 @@ TowerDefense.Engine.InputManager = class {
         const game = TowerDefense.Engine.Game.instance;
         const uiManager = game.uiManager;
         
-        // 检查是否点击了塔
-        let clickedTower = null;
-        for (let tower of game.towers) {
-            if (tower.active && tower.isClicked(x, y)) {
-                clickedTower = tower;
-                break;
-            }
-        }
-        
-        if (clickedTower) {
-            // 选择塔
-            uiManager.selectTower(clickedTower);
-        } else if (uiManager.selectedTowerType) {
-            // 尝试建造塔
-            const buildResult = game.mapSystem.canBuildAt(x, y);
-            if (buildResult.canBuild) {
-                game.buildTower(uiManager.selectedTowerType, buildResult.buildX, buildResult.buildY);
+        // 优先检查是否点击了绿色区域（可建造区域）
+        const gridResult = game.mapSystem.getGridAt(x, y);
+        if (gridResult.isValidGrid) {
+            // 检查该格子是否已有塔
+            const existingTower = game.mapSystem.getTowerAtGrid(gridResult.gridX, gridResult.gridY);
+            if (existingTower) {
+                // 已有塔，显示塔信息弹窗
+                uiManager.showTowerInfoModal(existingTower);
+            } else {
+                // 没有塔，显示塔选择弹窗
+                uiManager.showTowerSelectionModal(gridResult.buildX, gridResult.buildY);
             }
         } else {
-            // 取消选择
-            uiManager.deselectTower();
+            // 检查是否点击了塔（在非格子区域）
+            let clickedTower = null;
+            for (let tower of game.towers) {
+                if (tower.active && tower.isClicked(x, y)) {
+                    clickedTower = tower;
+                    break;
+                }
+            }
+            
+            if (clickedTower) {
+                // 选择塔（保持原有的选择逻辑）
+                uiManager.selectTower(clickedTower);
+            } else {
+                // 取消选择
+                uiManager.deselectTower();
+                uiManager.hideTowerSelectionModal();
+                uiManager.hideTowerInfoModal();
+            }
         }
     }
 };
@@ -1520,12 +1946,6 @@ TowerDefense.Engine.Game = class {
             this.gold -= config.cost;
             const tower = new TowerDefense.Entities.Tower(x, y, type);
             this.towers.push(tower);
-            
-            // 取消选择
-            this.uiManager.selectedTowerType = null;
-            document.querySelectorAll('.tower-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
             
             this.updateUI();
             return true;
