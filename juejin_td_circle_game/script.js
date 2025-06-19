@@ -1068,11 +1068,11 @@ TowerDefense.Systems.WaveManager = class {
                 this.endWave();
             }
             
-            // 检查波次是否结束（所有敌人被消灭）
-            if (this.enemySpawnQueue.length === 0 && 
-                TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
-                this.endWave();
-            }
+            // 注释掉自动结束波次的逻辑，让玩家等待倒计时完成
+            // if (this.enemySpawnQueue.length === 0 && 
+            //     TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
+            //     this.endWave();
+            // }
         }
     }
 
@@ -1269,10 +1269,8 @@ TowerDefense.Systems.WaveManager = class {
                 const adjustedPreparationTime = this.preparationTime / gameSpeed;
                 const timeLeft = Math.max(0, Math.ceil((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000));
                 waveCountdownEl.textContent = `准备时间: ${timeLeft}s`;
-                nextWaveBtn.disabled = false;
-                
-                const bonus = Math.floor((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000);
-                nextWaveBtn.textContent = `🚀 立即开始 (+${bonus}💰)`;
+                nextWaveBtn.disabled = true;
+                nextWaveBtn.textContent = '⏳ 准备中';
             } else if (this.currentWave >= TowerDefense.Data.WaveData.length) {
                 waveCountdownEl.textContent = '游戏完成!';
                 nextWaveBtn.disabled = true;
