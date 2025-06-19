@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TD塔防游戏</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- 游戏标题 -->
+        <header class="game-header">
+            <h1>🏰 TD塔防游戏</h1>
+            <div class="game-controls">
+                <button id="pauseBtn" class="control-btn">⏸️ 暂停</button>
+                <button id="speedBtn" class="control-btn">⚡ 1x</button>
+                <button id="restartBtn" class="control-btn">🔄 重新开始</button>
+            </div>
+        </header>
+
+        <!-- 游戏主体区域 -->
+        <main class="game-main">
+            <!-- 左侧游戏画布 -->
+            <div class="game-canvas-container">
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
+                
+                <!-- 游戏覆盖层UI -->
+                <div id="gameOverlay" class="game-overlay">
+                    <!-- 波次信息 -->
+                    <div class="wave-info">
+                        <span id="waveNumber">波次: 1</span>
+                        <span id="enemiesLeft">剩余敌人: 0</span>
+                    </div>
+                    
+                    <!-- 资源信息 -->
+                    <div class="resource-info">
+                        <span id="goldAmount">💰 500</span>
+                        <span id="monstersInCircle">👹 0/25</span>
+                        <span id="scoreAmount">🏆 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧控制面板 -->
+            <aside class="control-panel">
+                <!-- 塔建造面板 -->
+                <div class="build-panel">
+                    <h3>🏗️ 建造塔</h3>
+                    <div class="tower-buttons">
+                        <button class="tower-btn" data-tower="arrow">
+                            <div class="tower-icon">🏹</div>
+                            <div class="tower-name">箭塔</div>
+                            <div class="tower-cost">💰 50</div>
+                        </button>
+                        <button class="tower-btn" data-tower="cannon">
+                            <div class="tower-icon">💣</div>
+                            <div class="tower-name">炮塔</div>
+                            <div class="tower-cost">💰 100</div>
+                        </button>
+                        <button class="tower-btn" data-tower="ice">
+                            <div class="tower-icon">❄️</div>
+                            <div class="tower-name">寒冰塔</div>
+                            <div class="tower-cost">💰 80</div>
+                        </button>
+                        <button class="tower-btn" data-tower="poison">
+                            <div class="tower-icon">☠️</div>
+                            <div class="tower-name">毒塔</div>
+                            <div class="tower-cost">💰 120</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 塔信息面板 -->
+                <div class="tower-info-panel" id="towerInfoPanel" style="display: none;">
+                    <h3>🔧 塔信息</h3>
+                    <div id="towerDetails">
+                        <div class="tower-stat">
+                            <span>等级:</span>
+                            <span id="towerLevel">1</span>
+                        </div>
+                        <div class="tower-stat">
+                            <span>伤害:</span>
+                            <span id="towerDamage">10</span>
+                        </div>
+                        <div class="tower-stat">
+                            <span>射程:</span>
+                            <span id="towerRange">100</span>
+                        </div>
+                        <div class="tower-stat">
+                            <span>攻速:</span>
+                            <span id="towerSpeed">1.0</span>
+                        </div>
+                    </div>
+                    <div class="tower-actions">
+                        <button id="upgradeTowerBtn" class="action-btn upgrade-btn">⬆️ 升级 (💰 75)</button>
+                        <button id="sellTowerBtn" class="action-btn sell-btn">💸 出售 (💰 25)</button>
+                    </div>
+                </div>
+
+                <!-- 波次控制 -->
+                <div class="wave-control">
+                    <button id="nextWaveBtn" class="next-wave-btn">🚀 下一波 (+10💰)</button>
+                    <div class="wave-countdown" id="waveCountdown">下一波: 30s</div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- 游戏结束界面 -->
+        <div id="gameOverScreen" class="game-over-screen" style="display: none;">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">🎉 胜利!</h2>
+                <div class="final-stats">
+                    <div class="stat-item">
+                        <span>最终得分:</span>
+                        <span id="finalScore">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>完成波次:</span>
+                        <span id="finalWave">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>剩余生命:</span>
+                        <span id="finalLives">0</span>
+                    </div>
+                </div>
+                <div class="game-over-actions">
+                    <button id="playAgainBtn" class="action-btn">🔄 再玩一次</button>
+                    <button id="mainMenuBtn" class="action-btn">🏠 主菜单</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

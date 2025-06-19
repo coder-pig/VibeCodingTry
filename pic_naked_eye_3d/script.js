@@ -226,8 +226,8 @@ class NakedEye3DGenerator {
         this.bgColor = preset.dataset.bg;
         this.fgTextColor = preset.dataset.fg;
         
-        // 设置默认的背景文字颜色（互补色或对比色）
-        this.bgTextColor = this.getContrastColor(this.bgColor);
+        // 获取背景文字颜色，如果没有设置则使用对比色
+        this.bgTextColor = preset.dataset.bgText || this.getContrastColor(this.bgColor);
         
         // 更新自定义颜色选择器
         document.getElementById('bgColor').value = this.bgColor;

@@ -107,7 +107,7 @@ class MarkdownConverter {
                 proxiedHref = randomProxy + encodeURIComponent(href);
             }
             
-            return `<img src="${proxiedHref}" data-original="${href}"${altAttr}${titleAttr} style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;" data-retry-count="0" />`;
+            return `<section style="margin: 12px 0px; text-align: center; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;"><img src="${proxiedHref}" data-original="${href}"${altAttr}${titleAttr} style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0px;" data-retry-count="0" /></section>`;
         };
 
         // 自定义表格渲染
@@ -261,11 +261,32 @@ ${content}</tr>
     }
 
     /**
+     * 预处理markdown文本，修复加粗语法问题
+     */
+    preprocessMarkdown(text) {
+        // 修复末尾有空格的加粗语法问题，如：**UI设计稿 ** -> **UI设计稿**
+        let processedText = text.replace(/\*\*([^*]+?)\s+\*\*/g, '**$1**')
+                               .replace(/\*([^*]+?)\s+\*/g, '*$1*');
+        
+        // 修复加粗语法中间有多余空格的问题，如：** 文本 ** -> **文本**
+        processedText = processedText.replace(/\*\*\s+([^*]+?)\s+\*\*/g, '**$1**')
+                                   .replace(/\*\s+([^*]+?)\s+\*/g, '*$1*');
+        
+        // 修复加粗语法开头有空格的问题，如：** 文本** -> **文本**
+        processedText = processedText.replace(/\*\*\s+([^*]+?)\*\*/g, '**$1**')
+                                   .replace(/\*\s+([^*]+?)\*/g, '*$1*');
+        
+        return processedText;
+    }
+
+    /**
      * 更新预览内容
      */
     updatePreview() {
         try {
-            const markdownText = this.markdownInput.value;
+            let markdownText = this.markdownInput.value;
+            // 预处理markdown文本
+            markdownText = this.preprocessMarkdown(markdownText);
             const html = marked.parse(markdownText);
             const cleanHtml = DOMPurify.sanitize(html);
             
@@ -454,7 +475,7 @@ ${cleanHtml}
             headerContent = '<section style="visibility: visible; text-align: center; margin-bottom: 20px;"><img src="https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506111700614.jpeg" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" /></section>';
         } else {
             // 其他主题使用原来的headerSection
-            headerContent = '<section style="visibility: visible;"><section style="white-space: normal; max-width: 100%; min-height: 1em; color: rgb(51, 51, 51); text-align: center; visibility: visible;"><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">（给</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 128, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">抠腚男孩👦</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">加星标，提升</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 100, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;"><strong style="visibility: visible;">🤖AI</strong></span><span style="max-width: 100%; white-space: pre-wrap; color: rgb(255, 41, 65); font-size: 14px; line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">技能）</span></section></section>';
+            headerContent = '<section style="visibility: visible;"><br><section style="white-space: normal; max-width: 100%; min-height: 1em; color: rgb(51, 51, 51); text-align: center; visibility: visible;"><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">（给</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 128, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">抠腚男孩👦</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; color: rgb(255, 41, 65); line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">加星标，提升</span><span style="max-width: 100%; white-space: pre-wrap; font-size: 14px; line-height: 22.4px; color: rgb(0, 100, 255); box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;"><strong style="visibility: visible;">🤖AI</strong></span><span style="max-width: 100%; white-space: pre-wrap; color: rgb(255, 41, 65); font-size: 14px; line-height: 22.4px; box-sizing: border-box !important; overflow-wrap: break-word !important; visibility: visible;">技能）</span></section></section>';
         }
         
         const tempDiv = document.createElement('div');
@@ -523,6 +544,38 @@ ${cleanHtml}
             tagElements.forEach(element => {
                 if (elements[tag]) {
                     element.style.cssText = elements[tag];
+                }
+                // 特殊处理strong元素：在前后添加空格
+                if (tag === 'strong') {
+                    // 检查前面是否已经有空格或者是段落开头
+                    const prevSibling = element.previousSibling;
+                    if (prevSibling && prevSibling.nodeType === Node.TEXT_NODE) {
+                        const prevText = prevSibling.textContent;
+                        if (prevText && !prevText.endsWith(' ') && !prevText.endsWith('\n')) {
+                            prevSibling.textContent = prevText + ' ';
+                        }
+                    } else if (prevSibling && prevSibling.nodeType === Node.ELEMENT_NODE) {
+                        // 如果前面是元素节点，在strong前插入空格文本节点
+                        const spaceNode = document.createTextNode(' ');
+                        element.parentNode.insertBefore(spaceNode, element);
+                    }
+                    
+                    // 检查后面是否已经有空格或者是段落结尾
+                    const nextSibling = element.nextSibling;
+                    if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
+                        const nextText = nextSibling.textContent;
+                        if (nextText && !nextText.startsWith(' ') && !nextText.startsWith('\n')) {
+                            nextSibling.textContent = ' ' + nextText;
+                        }
+                    } else if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE) {
+                        // 如果后面是元素节点，在strong后插入空格文本节点
+                        const spaceNode = document.createTextNode(' ');
+                        element.parentNode.insertBefore(spaceNode, nextSibling);
+                    } else if (!nextSibling) {
+                        // 如果是段落末尾，也添加空格
+                        const spaceNode = document.createTextNode(' ');
+                        element.parentNode.appendChild(spaceNode);
+                    }
                 }
                 // 特殊处理strong和em元素内部的所有子元素，确保它们都是内联显示
                 if (tag === 'strong' || tag === 'em') {
