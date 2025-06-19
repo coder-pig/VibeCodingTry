@@ -315,12 +315,58 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
     attack() {
         if (!this.target) return;
 
+        // 预测目标位置（提高命中率）
+        const predictedTarget = this.predictTargetPosition(this.target);
+        
         // 创建弹道
         const projectile = new TowerDefense.Entities.Projectile(
-            this.x, this.y, this.target, this.damage, this.type
+            this.x, this.y, predictedTarget, this.damage, this.type
         );
         
         TowerDefense.Engine.Game.instance.addProjectile(projectile);
+    }
+    
+    /**
+     * 预测目标位置
+     */
+    predictTargetPosition(target) {
+        // 计算弹道飞行时间
+        const distance = TowerDefense.Utils.distance(this.x, this.y, target.x, target.y);
+        const projectileSpeed = TowerDefense.Data.TowerConfig[this.type].projectileSpeed;
+        const flightTime = distance / projectileSpeed;
+        
+        // 获取目标当前移动方向和速度
+        const pathPoints = TowerDefense.Data.MapData.pathPoints;
+        if (target.pathIndex >= pathPoints.length - 1) {
+            return target; // 如果在路径末端，直接瞄准当前位置
+        }
+        
+        const currentPoint = pathPoints[target.pathIndex];
+        const nextPoint = pathPoints[target.pathIndex + 1];
+        const dx = nextPoint.x - currentPoint.x;
+        const dy = nextPoint.y - currentPoint.y;
+        const pathDistance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (pathDistance === 0) {
+            return target;
+        }
+        
+        // 计算预测位置
+        const targetSpeed = target.speed * target.slowEffect;
+        const predictDistance = targetSpeed * flightTime;
+        
+        const dirX = dx / pathDistance;
+        const dirY = dy / pathDistance;
+        
+        return {
+            x: target.x + dirX * predictDistance,
+            y: target.y + dirY * predictDistance,
+            active: target.active,
+            size: target.size,
+            takeDamage: target.takeDamage.bind(target),
+            applySlow: target.applySlow.bind(target),
+            applyPoison: target.applyPoison.bind(target)
+        };
     }
 
     /**
@@ -606,7 +652,11 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
         this.speed = this.config.projectileSpeed;
         this.size = 5;
         
-        // 计算方向
+        // 根据塔类型决定弹道行为
+        this.isHoming = towerType === 'arrow' || towerType === 'ice'; // 箭塔和寒冰塔使用追踪弹道
+        this.homingStrength = 0.8; // 追踪强度
+        
+        // 计算初始方向
         const angle = TowerDefense.Utils.angle(x, y, target.x, target.y);
         this.vx = Math.cos(angle) * this.speed;
         this.vy = Math.sin(angle) * this.speed;
@@ -616,14 +666,40 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
      * 更新弹道
      */
     update(deltaTime) {
-        // 移动
-        this.x += this.vx * deltaTime / 1000;
-        this.y += this.vy * deltaTime / 1000;
-        
-        // 检查是否击中目标
-        if (this.target && this.target.active) {
+        // 如果目标不存在或已死亡，直线飞行
+        if (!this.target || !this.target.active) {
+            this.x += this.vx * deltaTime / 1000;
+            this.y += this.vy * deltaTime / 1000;
+        } else {
+            // 追踪弹道逻辑
+            if (this.isHoming) {
+                // 计算到目标的方向
+                const targetAngle = TowerDefense.Utils.angle(this.x, this.y, this.target.x, this.target.y);
+                const currentAngle = Math.atan2(this.vy, this.vx);
+                
+                // 角度差值计算（处理角度环绕）
+                let angleDiff = targetAngle - currentAngle;
+                if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // 平滑转向
+                const turnRate = this.homingStrength * deltaTime / 1000;
+                const newAngle = currentAngle + angleDiff * turnRate;
+                
+                // 更新速度向量
+                this.vx = Math.cos(newAngle) * this.speed;
+                this.vy = Math.sin(newAngle) * this.speed;
+            }
+            
+            // 移动
+            this.x += this.vx * deltaTime / 1000;
+            this.y += this.vy * deltaTime / 1000;
+            
+            // 改进的碰撞检测
             const distance = TowerDefense.Utils.distance(this.x, this.y, this.target.x, this.target.y);
-            if (distance < this.target.size) {
+            const hitRadius = this.target.size + this.size; // 增加碰撞半径
+            
+            if (distance < hitRadius) {
                 this.hit();
                 return;
             }
@@ -677,8 +753,12 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
             if (!enemy.active || enemy === this.target) continue;
             
             const distance = TowerDefense.Utils.distance(this.x, this.y, enemy.x, enemy.y);
-            if (distance <= splashRadius) {
-                const splashDamage = Math.floor(this.damage * 0.5);
+            const effectiveRadius = splashRadius + enemy.size; // 考虑敌人大小
+            
+            if (distance <= effectiveRadius) {
+                // 根据距离计算伤害衰减
+                const damageRatio = Math.max(0.3, 1 - (distance / effectiveRadius));
+                const splashDamage = Math.floor(this.damage * 0.5 * damageRatio);
                 enemy.takeDamage(splashDamage);
             }
         }
