@@ -1025,8 +1025,12 @@ TowerDefense.Systems.WaveManager = class {
         this.enemySpawnQueue = [];
         this.nextSpawnTime = 0;
         this.waveStartTime = 0;
-        this.timeBetweenWaves = 30000; // 30秒
-        this.nextWaveTime = Date.now() + this.timeBetweenWaves;
+        this.waveTimeLimit = 60000; // 每波限时1分钟
+        this.preparationTime = 12000; // 准备时间12秒
+        this.nextWaveTime = Date.now() + this.preparationTime;
+        this.showingPreview = false;
+        this.previewStartTime = 0;
+        this.lastGoldTime = Date.now(); // 用于每秒增加金币
     }
 
     /**
@@ -1034,17 +1038,37 @@ TowerDefense.Systems.WaveManager = class {
      */
     update() {
         const now = Date.now();
+        const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
         
-        if (!this.waveInProgress) {
-            // 检查是否开始下一波
+        // 每秒增加1金币，考虑倍速
+        const goldInterval = 1000 / gameSpeed;
+        if (now - this.lastGoldTime >= goldInterval) {
+            TowerDefense.Engine.Game.instance.gold += 1;
+            this.lastGoldTime = now;
+        }
+        
+        if (!this.waveInProgress && !this.showingPreview) {
+            // 检查是否开始下一波预告
             if (now >= this.nextWaveTime) {
+                this.startWavePreview();
+            }
+        } else if (this.showingPreview) {
+            // 检查预告时间是否结束，考虑倍速
+            const adjustedPreparationTime = this.preparationTime / gameSpeed;
+            if (now >= this.previewStartTime + adjustedPreparationTime) {
                 this.startNextWave();
             }
         } else {
             // 生成敌人
             this.spawnEnemies();
             
-            // 检查波次是否结束
+            // 检查波次时间限制，考虑倍速
+            const adjustedWaveTimeLimit = this.waveTimeLimit / gameSpeed;
+            if (now >= this.waveStartTime + adjustedWaveTimeLimit) {
+                this.endWave();
+            }
+            
+            // 检查波次是否结束（所有敌人被消灭）
             if (this.enemySpawnQueue.length === 0 && 
                 TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
                 this.endWave();
@@ -1052,6 +1076,23 @@ TowerDefense.Systems.WaveManager = class {
         }
     }
 
+    /**
+     * 开始下一波预告
+     */
+    startWavePreview() {
+        if (this.currentWave >= TowerDefense.Data.WaveData.length) {
+            // 游戏胜利
+            TowerDefense.Engine.Game.instance.gameWin();
+            return;
+        }
+        
+        this.showingPreview = true;
+        this.previewStartTime = Date.now();
+        
+        // 更新UI显示预告信息
+        this.updateUI();
+    }
+    
     /**
      * 开始下一波
      */
@@ -1062,18 +1103,20 @@ TowerDefense.Systems.WaveManager = class {
             return;
         }
         
+        this.showingPreview = false;
         this.waveInProgress = true;
         this.waveStartTime = Date.now();
         
-        // 准备敌人生成队列
+        // 准备敌人生成队列，考虑倍速
         const waveData = TowerDefense.Data.WaveData[this.currentWave];
+        const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
         this.enemySpawnQueue = [];
         
         for (let enemyGroup of waveData.enemies) {
             for (let i = 0; i < enemyGroup.count; i++) {
                 this.enemySpawnQueue.push({
                     type: enemyGroup.type,
-                    spawnTime: this.waveStartTime + i * enemyGroup.interval
+                    spawnTime: this.waveStartTime + i * (enemyGroup.interval / gameSpeed)
                 });
             }
         }
@@ -1105,12 +1148,18 @@ TowerDefense.Systems.WaveManager = class {
      */
     endWave() {
         this.waveInProgress = false;
-        this.nextWaveTime = Date.now() + this.timeBetweenWaves;
+        this.showingPreview = false;
+        
+        // 清空剩余的敌人生成队列
+        this.enemySpawnQueue = [];
         
         // 波次奖励
         const bonus = this.currentWave * 10;
         TowerDefense.Engine.Game.instance.gold += bonus;
         TowerDefense.Engine.Game.instance.score += bonus * 5;
+        
+        // 设置下一波预告时间（立即开始预告）
+        this.nextWaveTime = Date.now() + 1000; // 1秒后开始预告
         
         this.updateUI();
     }
@@ -1119,13 +1168,42 @@ TowerDefense.Systems.WaveManager = class {
      * 手动开始下一波
      */
     startNextWaveEarly() {
-        if (!this.waveInProgress && this.currentWave < TowerDefense.Data.WaveData.length) {
-            // 提前开始奖励
-            const timeBonus = Math.floor((this.nextWaveTime - Date.now()) / 1000);
+        if (this.showingPreview && this.currentWave < TowerDefense.Data.WaveData.length) {
+            // 提前开始奖励，考虑倍速
+            const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
+            const adjustedPreparationTime = this.preparationTime / gameSpeed;
+            const timeBonus = Math.floor((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000);
             TowerDefense.Engine.Game.instance.gold += timeBonus;
             
-            this.nextWaveTime = Date.now();
+            // 立即开始下一波
+            this.startNextWave();
         }
+    }
+    
+    /**
+     * 获取下一波敌人预告信息
+     */
+    getNextWavePreview() {
+        if (this.currentWave >= TowerDefense.Data.WaveData.length) {
+            return null;
+        }
+        
+        const waveData = TowerDefense.Data.WaveData[this.currentWave];
+        const enemyTypes = [];
+        
+        for (let enemyGroup of waveData.enemies) {
+            const config = TowerDefense.Data.EnemyConfig[enemyGroup.type];
+            enemyTypes.push({
+                name: config.name,
+                icon: config.icon,
+                count: enemyGroup.count
+            });
+        }
+        
+        return {
+            waveNumber: this.currentWave + 1,
+            enemies: enemyTypes
+        };
     }
 
     /**
@@ -1136,6 +1214,7 @@ TowerDefense.Systems.WaveManager = class {
         const enemiesLeftEl = document.getElementById('enemiesLeft');
         const waveCountdownEl = document.getElementById('waveCountdown');
         const nextWaveBtn = document.getElementById('nextWaveBtn');
+        const wavePreviewEl = document.getElementById('wavePreview');
         
         if (waveNumberEl) {
             waveNumberEl.textContent = `波次: ${this.currentWave}`;
@@ -1147,20 +1226,62 @@ TowerDefense.Systems.WaveManager = class {
             enemiesLeftEl.textContent = `剩余敌人: ${activeEnemies + queuedEnemies}`;
         }
         
+        // 更新波次预告显示
+        if (wavePreviewEl) {
+            if (this.showingPreview) {
+                const preview = this.getNextWavePreview();
+                if (preview) {
+                    const titleEl = wavePreviewEl.querySelector('.preview-title');
+                    const contentEl = wavePreviewEl.querySelector('.preview-content');
+                    
+                    if (titleEl) {
+                        titleEl.textContent = `📢 第${preview.waveNumber}波即将到来！`;
+                    }
+                    
+                    if (contentEl) {
+                        let enemyText = '敌人类型:\n';
+                        preview.enemies.forEach((enemy, index) => {
+                            if (index > 0) enemyText += '\n';
+                            enemyText += `${enemy.icon} ${enemy.name} × ${enemy.count}`;
+                        });
+                        contentEl.textContent = enemyText;
+                    }
+                    
+                    wavePreviewEl.style.display = 'block';
+                } else {
+                    wavePreviewEl.style.display = 'none';
+                }
+            } else {
+                wavePreviewEl.style.display = 'none';
+            }
+        }
+        
         if (waveCountdownEl && nextWaveBtn) {
+            const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
+            
             if (this.waveInProgress) {
-                waveCountdownEl.textContent = '战斗中...';
+                const adjustedWaveTimeLimit = this.waveTimeLimit / gameSpeed;
+                const timeLeft = Math.max(0, Math.ceil((this.waveStartTime + adjustedWaveTimeLimit - Date.now()) / 1000));
+                waveCountdownEl.textContent = `战斗中... 剩余时间: ${timeLeft}s`;
                 nextWaveBtn.disabled = true;
+                nextWaveBtn.textContent = '⚔️ 战斗中';
+            } else if (this.showingPreview) {
+                const adjustedPreparationTime = this.preparationTime / gameSpeed;
+                const timeLeft = Math.max(0, Math.ceil((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000));
+                waveCountdownEl.textContent = `准备时间: ${timeLeft}s`;
+                nextWaveBtn.disabled = false;
+                
+                const bonus = Math.floor((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000);
+                nextWaveBtn.textContent = `🚀 立即开始 (+${bonus}💰)`;
             } else if (this.currentWave >= TowerDefense.Data.WaveData.length) {
                 waveCountdownEl.textContent = '游戏完成!';
                 nextWaveBtn.disabled = true;
+                nextWaveBtn.textContent = '🏆 胜利';
             } else {
                 const timeLeft = Math.max(0, Math.ceil((this.nextWaveTime - Date.now()) / 1000));
-                waveCountdownEl.textContent = `下一波: ${timeLeft}s`;
-                nextWaveBtn.disabled = false;
-                
-                const bonus = Math.floor((this.nextWaveTime - Date.now()) / 1000);
-                nextWaveBtn.textContent = `🚀 下一波 (+${bonus}💰)`;
+                waveCountdownEl.textContent = `下一波预告: ${timeLeft}s`;
+                nextWaveBtn.disabled = true;
+                nextWaveBtn.textContent = '⏳ 等待中';
             }
         }
     }
@@ -2098,6 +2219,8 @@ TowerDefense.Engine.Game = class {
         // 重置系统
         this.waveManager = new TowerDefense.Systems.WaveManager();
         this.uiManager.deselectTower();
+        this.uiManager.hideTowerSelectionModal();
+        this.uiManager.hideTowerInfoModal();
         
         // 隐藏游戏结束界面
         const gameOverScreen = document.getElementById('gameOverScreen');

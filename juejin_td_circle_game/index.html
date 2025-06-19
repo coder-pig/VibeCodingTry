@@ -44,64 +44,16 @@
 
             <!-- 右侧控制面板 -->
             <aside class="control-panel">
-                <!-- 塔建造面板 -->
-                <div class="build-panel">
-                    <h3>🏗️ 建造塔</h3>
-                    <div class="tower-buttons">
-                        <button class="tower-btn" data-tower="arrow">
-                            <div class="tower-icon">🏹</div>
-                            <div class="tower-name">箭塔</div>
-                            <div class="tower-cost">💰 50</div>
-                        </button>
-                        <button class="tower-btn" data-tower="cannon">
-                            <div class="tower-icon">💣</div>
-                            <div class="tower-name">炮塔</div>
-                            <div class="tower-cost">💰 100</div>
-                        </button>
-                        <button class="tower-btn" data-tower="ice">
-                            <div class="tower-icon">❄️</div>
-                            <div class="tower-name">寒冰塔</div>
-                            <div class="tower-cost">💰 80</div>
-                        </button>
-                        <button class="tower-btn" data-tower="poison">
-                            <div class="tower-icon">☠️</div>
-                            <div class="tower-name">毒塔</div>
-                            <div class="tower-cost">💰 120</div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 塔信息面板 -->
-                <div class="tower-info-panel" id="towerInfoPanel" style="display: none;">
-                    <h3>🔧 塔信息</h3>
-                    <div id="towerDetails">
-                        <div class="tower-stat">
-                            <span>等级:</span>
-                            <span id="towerLevel">1</span>
-                        </div>
-                        <div class="tower-stat">
-                            <span>伤害:</span>
-                            <span id="towerDamage">10</span>
-                        </div>
-                        <div class="tower-stat">
-                            <span>射程:</span>
-                            <span id="towerRange">100</span>
-                        </div>
-                        <div class="tower-stat">
-                            <span>攻速:</span>
-                            <span id="towerSpeed">1.0</span>
-                        </div>
-                    </div>
-                    <div class="tower-actions">
-                        <button id="upgradeTowerBtn" class="action-btn upgrade-btn">⬆️ 升级 (💰 75)</button>
-                        <button id="sellTowerBtn" class="action-btn sell-btn">💸 出售 (💰 25)</button>
-                    </div>
-                </div>
-
                 <!-- 波次控制 -->
                 <div class="wave-control">
                     <button id="nextWaveBtn" class="next-wave-btn">🚀 下一波 (+10💰)</button>
                     <div class="wave-countdown" id="waveCountdown">下一波: 30s</div>
+                    
+                    <!-- 波次预告 -->
+                    <div id="wavePreview" class="wave-preview" style="display: none;">
+                        <div class="preview-title">📢 下一波预告</div>
+                        <div class="preview-content">即将到来的敌人...</div>
+                    </div>
                 </div>
             </aside>
         </main>
