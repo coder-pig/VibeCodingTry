@@ -614,11 +614,11 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         const barY = this.y - this.size - 8;
         
         // 血条背景
-        ctx.fillStyle = '#FF0000';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
         ctx.fillRect(this.x - barWidth/2, barY, barWidth, barHeight);
         
         // 血条前景
-        ctx.fillStyle = '#00FF00';
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
         const healthPercent = this.health / this.maxHealth;
         ctx.fillRect(this.x - barWidth/2, barY, barWidth * healthPercent, barHeight);
         
@@ -1495,11 +1495,20 @@ TowerDefense.Systems.UIManager = class {
      * 显示伤害文字
      */
     showDamageText(x, y, damage) {
+        // 获取画布的位置信息
+        const canvas = document.getElementById('gameCanvas');
+        const rect = canvas.getBoundingClientRect();
+        
         const damageEl = document.createElement('div');
         damageEl.className = 'damage-text';
         damageEl.textContent = `-${damage}`;
-        damageEl.style.left = `${x}px`;
-        damageEl.style.top = `${y}px`;
+        
+        // 计算相对于页面的绝对位置
+        const absoluteX = rect.left + x;
+        const absoluteY = rect.top + y;
+        
+        damageEl.style.left = `${absoluteX}px`;
+        damageEl.style.top = `${absoluteY}px`;
         
         document.body.appendChild(damageEl);
         

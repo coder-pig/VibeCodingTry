@@ -516,7 +516,7 @@ body {
 /* 特效样式 */
 .damage-text {
     position: absolute;
-    color: #ff4757;
+    color: #fffc47;
     font-weight: bold;
     font-size: 1.2em;
     pointer-events: none;
