@@ -128,6 +128,91 @@ TowerDefense.Data = {
                 attackSpeed: [1.8, 2.2, 2.8],
                 cost: [180, 360, 720]
             }
+        },
+        // 辅助型塔
+        heroic_totem: {
+            name: '英勇图腾',
+            cost: 200,
+            damage: 0,
+            range: 80,
+            attackSpeed: 0,
+            icon: '🗲',
+            color: '#FF6B35',
+            type: 'support',
+            buffType: 'damage',
+            buffValue: 0.15, // 15%攻击力加成
+            upgrades: {
+                buffValue: [0.20, 0.25, 0.35],
+                range: [100, 120, 150],
+                cost: [300, 600, 1200]
+            }
+        },
+        speed_beacon: {
+            name: '急速信标',
+            cost: 200,
+            damage: 0,
+            range: 80,
+            attackSpeed: 0,
+            icon: '⚡',
+            color: '#00CED1',
+            type: 'support',
+            buffType: 'attackSpeed',
+            buffValue: 0.15, // 15%攻击速度加成
+            upgrades: {
+                buffValue: [0.20, 0.25, 0.35],
+                range: [100, 120, 150],
+                cost: [300, 600, 1200]
+            }
+        },
+        weakness_curse: {
+            name: '虚弱诅咒塔',
+            cost: 180,
+            damage: 0,
+            range: 60,
+            attackSpeed: 0,
+            icon: '💀',
+            color: '#8B008B',
+            type: 'support',
+            buffType: 'enemyDefense',
+            buffValue: 0.20, // 降低敌人20%防御力
+            upgrades: {
+                buffValue: [0.25, 0.30, 0.40],
+                range: [80, 100, 130],
+                cost: [270, 540, 1080]
+            }
+        },
+        slow_field: {
+            name: '减速场发生器',
+            cost: 160,
+            damage: 0,
+            range: 100,
+            attackSpeed: 0,
+            icon: '🌀',
+            color: '#4169E1',
+            type: 'support',
+            buffType: 'enemySpeed',
+            buffValue: 0.15, // 降低敌人15%移动速度
+            upgrades: {
+                buffValue: [0.20, 0.25, 0.35],
+                range: [120, 140, 180],
+                cost: [240, 480, 960]
+            }
+        },
+        // 功能型塔
+        bank_tower: {
+            name: '银行塔',
+            cost: 300,
+            damage: 0,
+            range: 0,
+            attackSpeed: 0,
+            icon: '🏦',
+            color: '#FFD700',
+            type: 'functional',
+            goldPerSecond: 2,
+            upgrades: {
+                goldPerSecond: [4, 6, 8],
+                cost: [450, 900, 1800]
+            }
         }
     },
 
@@ -273,19 +358,53 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         this.lastAttackTime = 0;
         this.size = 30;
         this.selected = false;
+        
+        // 辅助型塔和功能型塔的特殊属性
+        this.towerType = this.config.type || 'attack'; // attack, support, functional
+        this.buffValue = this.config.buffValue || 0;
+        this.buffType = this.config.buffType || null;
+        this.goldPerSecond = this.config.goldPerSecond || 0;
+        this.lastGoldTime = Date.now();
     }
 
     /**
      * 更新塔的逻辑
      */
     update(deltaTime, enemies) {
-        // 寻找目标
-        this.findTarget(enemies);
+        // 重置攻击塔的增益效果（每帧重新计算）
+        if (this.towerType === 'attack') {
+            this.resetBuffs();
+        }
         
-        // 攻击目标
-        if (this.target && Date.now() - this.lastAttackTime > 1000 / this.attackSpeed) {
-            this.attack();
-            this.lastAttackTime = Date.now();
+        // 重置敌人的负面效果（每帧重新计算）
+        for (let enemy of enemies) {
+            if (enemy.active) {
+                enemy.resetDebuffs();
+            }
+        }
+        
+        // 根据塔类型执行不同逻辑
+        switch (this.towerType) {
+            case 'attack':
+                // 攻击型塔的逻辑
+                this.findTarget(enemies);
+                if (this.target && Date.now() - this.lastAttackTime > 1000 / this.attackSpeed) {
+                    this.attack();
+                    this.lastAttackTime = Date.now();
+                }
+                break;
+                
+            case 'support':
+                // 辅助型塔的逻辑 - 为范围内的攻击塔提供增益
+                this.applySupportBuffs();
+                // 对敌人施加负面效果
+                this.applyEnemyDebuffs(enemies);
+                break;
+                
+            case 'functional':
+                // 功能型塔的逻辑 - 银行塔产生金币
+                this.generateGold();
+                break;
         }
     }
 
@@ -370,6 +489,84 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
     }
 
     /**
+     * 辅助型塔 - 为范围内攻击塔提供增益
+     */
+    applySupportBuffs() {
+        if (this.buffType === 'damage' || this.buffType === 'attackSpeed') {
+            const game = TowerDefense.Engine.Game.instance;
+            for (let tower of game.towers) {
+                if (tower.active && tower.towerType === 'attack' && tower !== this) {
+                    const distance = TowerDefense.Utils.distance(this.x, this.y, tower.x, tower.y);
+                    if (distance <= this.range) {
+                        // 应用增益效果
+                        tower.receiveBuff(this.buffType, this.buffValue);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 对敌人施加负面效果
+     */
+    applyEnemyDebuffs(enemies) {
+        if (this.buffType === 'enemyDefense' || this.buffType === 'enemySpeed') {
+            for (let enemy of enemies) {
+                if (enemy.active) {
+                    const distance = TowerDefense.Utils.distance(this.x, this.y, enemy.x, enemy.y);
+                    if (distance <= this.range) {
+                        // 应用负面效果
+                        enemy.receiveDebuff(this.buffType, this.buffValue);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 功能型塔 - 产生金币
+     */
+    generateGold() {
+        const now = Date.now();
+        if (now - this.lastGoldTime >= 1000) { // 每秒产生金币
+            TowerDefense.Engine.Game.instance.gold += this.goldPerSecond;
+            this.lastGoldTime = now;
+        }
+    }
+    
+    /**
+     * 重置增益效果
+     */
+    resetBuffs() {
+        if (this.originalStats) {
+            this.damage = this.originalStats.damage;
+            this.attackSpeed = this.originalStats.attackSpeed;
+        }
+    }
+    
+    /**
+     * 接收增益效果
+     */
+    receiveBuff(buffType, buffValue) {
+        // 临时增益，每帧重新计算
+        if (!this.originalStats) {
+            this.originalStats = {
+                damage: this.config.damage,
+                attackSpeed: this.config.attackSpeed
+            };
+        }
+        
+        switch (buffType) {
+            case 'damage':
+                this.damage = this.originalStats.damage * (1 + buffValue);
+                break;
+            case 'attackSpeed':
+                this.attackSpeed = this.originalStats.attackSpeed * (1 + buffValue);
+                break;
+        }
+    }
+
+    /**
      * 升级塔
      */
     upgrade() {
@@ -381,11 +578,19 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         if (TowerDefense.Engine.Game.instance.gold >= cost) {
             TowerDefense.Engine.Game.instance.gold -= cost;
             
-            this.damage = upgrades.damage[this.level - 1];
-            this.range = upgrades.range[this.level - 1];
-            this.attackSpeed = upgrades.attackSpeed[this.level - 1];
-            this.level++;
+            // 根据塔类型升级不同属性
+            if (this.towerType === 'attack') {
+                this.damage = upgrades.damage[this.level - 1];
+                this.range = upgrades.range[this.level - 1];
+                this.attackSpeed = upgrades.attackSpeed[this.level - 1];
+            } else if (this.towerType === 'support') {
+                this.buffValue = upgrades.buffValue[this.level - 1];
+                this.range = upgrades.range[this.level - 1];
+            } else if (this.towerType === 'functional') {
+                this.goldPerSecond = upgrades.goldPerSecond[this.level - 1];
+            }
             
+            this.level++;
             return true;
         }
         
@@ -407,22 +612,40 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
      */
     render(ctx) {
         // 绘制射程圆圈（仅在选中时显示）
-        if (this.selected) {
+        if (this.selected && this.range > 0) {
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
             ctx.stroke();
         }
+        
+        // 为辅助型塔绘制影响范围（半透明圆圈）
+        if (this.towerType === 'support' && this.range > 0) {
+            ctx.fillStyle = this.config.color + '20'; // 添加透明度
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // 绘制塔身
-        ctx.fillStyle = this.config.color;
-        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        if (this.towerType === 'support') {
+            // 辅助型塔绘制为圆形
+            ctx.fillStyle = this.config.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // 攻击型塔和功能型塔绘制为方形
+            ctx.fillStyle = this.config.color;
+            ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        }
         
         // 绘制塔的图标
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
         ctx.fillText(this.config.icon, this.x, this.y);
         
         // 绘制等级
@@ -436,7 +659,22 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         if (this.selected) {
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 3;
-            ctx.strokeRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+            if (this.towerType === 'support') {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size/2 + 2, 0, Math.PI * 2);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+            }
+        }
+        
+        // 银行塔特殊效果 - 金币飘动动画
+        if (this.towerType === 'functional' && this.type === 'bank_tower') {
+            const time = Date.now() * 0.003;
+            const offsetY = Math.sin(time) * 3;
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '12px Arial';
+            ctx.fillText('💰', this.x, this.y - this.size/2 - 10 + offsetY);
         }
     }
 
@@ -478,6 +716,10 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         this.poisonDamage = 0;
         this.poisonEndTime = 0;
         this.lastPoisonTick = 0;
+        
+        // 负面效果
+        this.defenseDebuff = 1; // 防御力倍数
+        this.speedDebuff = 1;   // 速度倍数
     }
 
     /**
@@ -533,7 +775,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
             return;
         }
         
-        const moveDistance = this.speed * this.slowEffect * deltaTime / 1000;
+        const moveDistance = this.speed * this.slowEffect * this.speedDebuff * deltaTime / 1000;
         this.pathProgress += moveDistance / distance;
         
         if (this.pathProgress >= 1) {
@@ -552,13 +794,37 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
     }
 
     /**
+     * 重置负面效果
+     */
+    resetDebuffs() {
+        this.defenseDebuff = 1;
+        this.speedDebuff = 1;
+    }
+    
+    /**
+     * 接收负面效果
+     */
+    receiveDebuff(debuffType, debuffValue) {
+        switch (debuffType) {
+            case 'enemyDefense':
+                this.defenseDebuff = 1 - debuffValue; // 降低防御力
+                break;
+            case 'enemySpeed':
+                this.speedDebuff = 1 - debuffValue; // 降低移动速度
+                break;
+        }
+    }
+
+    /**
      * 受到伤害
      */
     takeDamage(damage) {
-        this.health -= damage;
+        // 应用防御力减免
+        const actualDamage = Math.floor(damage * this.defenseDebuff);
+        this.health -= actualDamage;
         
         // 显示伤害数字
-        TowerDefense.Engine.Game.instance.showDamageText(this.x, this.y, damage);
+        TowerDefense.Engine.Game.instance.showDamageText(this.x, this.y, actualDamage);
         
         if (this.health <= 0) {
             this.die();
@@ -1556,13 +1822,14 @@ TowerDefense.Systems.UIManager = class {
         const buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = `
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
             margin-bottom: 15px;
+            max-width: 600px;
         `;
         
         // 为每种塔类型创建按钮
-        const towerTypes = ['arrow', 'cannon', 'ice', 'poison'];
+        const towerTypes = ['arrow', 'cannon', 'ice', 'poison', 'heroic_totem', 'speed_beacon', 'weakness_curse', 'slow_field', 'bank_tower'];
         towerTypes.forEach(towerType => {
             const config = TowerDefense.Data.TowerConfig[towerType];
             const button = document.createElement('button');
@@ -2013,7 +2280,7 @@ TowerDefense.Engine.Game = class {
         // 游戏数据
         this.gold = 500;
         this.score = 0;
-        this.maxMonstersInCircle = 25; // 圈子里最大怪物数量
+        this.maxMonstersInCircle = 50; // 圈子里最大怪物数量
         
         // 游戏对象
         this.towers = [];
@@ -2101,7 +2368,7 @@ TowerDefense.Engine.Game = class {
         this.enemies = this.enemies.filter(enemy => enemy.active);
         this.projectiles = this.projectiles.filter(projectile => projectile.active);
         
-        // 检查游戏结束条件 - 圈子里怪物超过25只
+        // 检查游戏结束条件 - 圈子里怪物超过50只
         const activeEnemies = this.enemies.filter(enemy => enemy.active).length;
         if (activeEnemies > this.maxMonstersInCircle) {
             this.gameOver();
