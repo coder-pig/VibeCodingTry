@@ -1880,15 +1880,11 @@ TowerDefense.Systems.UIManager = class {
      */
     upgradeTowerFromModal() {
         if (this.modalSelectedTower) {
-            const game = TowerDefense.Engine.Game.instance;
             const tower = this.modalSelectedTower;
-            const config = tower.config;
             
             if (tower.level < 4) {
-                const upgradeCost = config.upgrades.cost[tower.level - 1];
-                if (game.gold >= upgradeCost) {
-                    game.gold -= upgradeCost;
-                    tower.upgrade();
+                // 直接调用塔的upgrade方法，它会处理金币检查和扣除
+                if (tower.upgrade()) {
                     this.showTowerInfoModal(tower); // 刷新弹窗信息
                     this.updateResourceDisplay();
                 }
@@ -2208,6 +2204,7 @@ TowerDefense.Engine.Game = class {
         this.score = 0;
         this.isPaused = false;
         this.gameSpeed = 1;
+        this.isRunning = false; // 先停止当前游戏循环
         
         // 清空游戏对象
         this.towers = [];
@@ -2234,6 +2231,9 @@ TowerDefense.Engine.Game = class {
         if (speedBtn) speedBtn.textContent = '⚡ 1x';
         
         this.updateUI();
+        
+        // 重新启动游戏循环
+        this.start();
     }
 
     /**
