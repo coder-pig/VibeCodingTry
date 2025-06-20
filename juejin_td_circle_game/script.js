@@ -1443,26 +1443,8 @@ TowerDefense.Systems.MapSystem = class {
      * 渲染格子网格
      */
     renderGrid(ctx) {
-        ctx.strokeStyle = '#E0E0E0';
-        ctx.lineWidth = 1;
-
-        // 绘制垂直线
-        for (let col = 0; col <= this.mapData.gridCols; col++) {
-            const x = this.mapData.offsetX + col * this.mapData.gridSize;
-            ctx.beginPath();
-            ctx.moveTo(x, this.mapData.offsetY);
-            ctx.lineTo(x, this.mapData.offsetY + this.mapData.gridRows * this.mapData.gridSize);
-            ctx.stroke();
-        }
-
-        // 绘制水平线
-        for (let row = 0; row <= this.mapData.gridRows; row++) {
-            const y = this.mapData.offsetY + row * this.mapData.gridSize;
-            ctx.beginPath();
-            ctx.moveTo(this.mapData.offsetX, y);
-            ctx.lineTo(this.mapData.offsetX + this.mapData.gridCols * this.mapData.gridSize, y);
-            ctx.stroke();
-        }
+        // 不再绘制格子边框
+        // 用户要求移除格子边框
     }
 
     /**
@@ -1485,48 +1467,21 @@ TowerDefense.Systems.MapSystem = class {
                 ctx.fillRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
             }
 
-            // 绘制边框
-            ctx.strokeStyle = '#8B4513'; // 棕色边框更配土路
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+            // 不再绘制边框
+            // 用户要求格子连接处的边框宽度设置为0
+            ctx.lineWidth = 0;
         }
 
-        // 绘制路径方向箭头
-        this.renderPathArrows(ctx);
+        // 不再绘制路径方向箭头
+        // 用户要求移除箭头
     }
 
     /**
      * 渲染路径方向箭头
      */
     renderPathArrows(ctx) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // 从索引1开始，跳过起点[0,2]的箭头绘制
-        for (let i = 1; i < this.mapData.pathGrid.length; i++) {
-            const current = this.mapData.pathGrid[i];
-            // 如果是最后一个点，下一个点是起点（形成循环）
-            const next = i === this.mapData.pathGrid.length - 1
-                ? this.mapData.pathGrid[0]
-                : this.mapData.pathGrid[i + 1];
-
-            const x = this.mapData.offsetX + current[0] * this.mapData.gridSize + this.mapData.gridSize / 2;
-            const y = this.mapData.offsetY + current[1] * this.mapData.gridSize + this.mapData.gridSize / 2;
-
-            // 计算方向
-            const dx = next[0] - current[0];
-            const dy = next[1] - current[1];
-
-            let arrow = '→';
-            if (dx > 0) arrow = '→';
-            else if (dx < 0) arrow = '←';
-            else if (dy > 0) arrow = '↓';
-            else if (dy < 0) arrow = '↑';
-
-            ctx.fillText(arrow, x, y);
-        }
+        // 不再绘制箭头
+        // 用户要求移除方格箭头
     }
 
     /**
@@ -1549,34 +1504,34 @@ TowerDefense.Systems.MapSystem = class {
                 // 已有塔的区域显示为暗化的草地或灰色
                 if (grassTileImg && grassTileImg.complete) {
                     ctx.globalAlpha = 0.5; // 半透明效果
-                    ctx.drawImage(grassTileImg, area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.drawImage(grassTileImg, area.x, area.y, area.width, area.height);
                     ctx.globalAlpha = 1.0; // 恢复透明度
                     
                     // 添加灰色遮罩
                     ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
-                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.fillRect(area.x, area.y, area.width, area.height);
                 } else {
                     // 降级到灰色填充
                     ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
-                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.fillRect(area.x, area.y, area.width, area.height);
                 }
-                ctx.strokeStyle = '#808080';
+                // 不再绘制边框
+                // 用户要求移除格子边框
             } else {
                 // 可建造区域显示为草地纹理
                 if (grassTileImg && grassTileImg.complete) {
-                    ctx.drawImage(grassTileImg, area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.drawImage(grassTileImg, area.x, area.y, area.width, area.height);
                     
-                    // 添加轻微的绿色高亮边框表示可建造
-                    ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    // 不再绘制边框
+                    // 用户要求格子连接处的边框宽度设置为0
+                    ctx.lineWidth = 0;
                 } else {
                     // 降级到绿色填充
                     ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
-                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
-                    ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.fillRect(area.x, area.y, area.width, area.height);
+                    // 不再绘制边框
+                    // 用户要求格子连接处的边框宽度设置为0
+                    ctx.lineWidth = 0;
                 }
             }
         }
