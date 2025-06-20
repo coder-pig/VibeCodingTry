@@ -2068,10 +2068,6 @@ TowerDefense.Systems.UIManager = class {
             monstersEl.textContent = `👹 ${activeEnemies}/${game.maxMonstersInCircle}`;
         }
         if (scoreEl) scoreEl.textContent = `🏆 ${game.score}`;
-
-        // 塔建造按钮状态更新已移除，改为弹窗选择模式
-        // 按钮状态在弹窗显示时动态更新
-
         // 更新塔信息面板
         if (this.selectedTower) {
             this.updateTowerInfo();
@@ -2156,8 +2152,40 @@ TowerDefense.Systems.UIManager = class {
             const button = document.createElement('button');
             button.className = 'modal-tower-btn';
             button.dataset.tower = towerType;
+            
+            // 创建图片元素或使用emoji作为降级
+            let iconHtml;
+            // 直接使用图片URL，不依赖ImageManager的加载状态
+            const imageAssets = [
+                { name: 'arrow_tower', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251345.png' },
+                { name: 'cannon_tower', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251346.png' },
+                { name: 'ice_tower', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251347.png' },
+                { name: 'poison_tower', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251348.png' },
+                { name: 'heroic_totem', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251349.png' },
+                { name: 'speed_beacon', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251351.png' },
+                { name: 'weakness_curse', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251352.png' },
+                { name: 'slow_field', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251353.png' },
+                { name: 'bank_tower', url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251354.png' }
+            ];
+            
+            // 处理特殊塔类型的名称映射
+            let towerImageName;
+            if (['heroic_totem', 'speed_beacon', 'weakness_curse', 'slow_field', 'bank_tower'].includes(towerType)) {
+                towerImageName = towerType; // 这些塔类型直接使用原名
+            } else {
+                towerImageName = towerType + '_tower'; // 其他塔类型加上_tower后缀
+            }
+            const imageAsset = imageAssets.find(asset => asset.name === towerImageName);
+            
+            if (imageAsset) {
+                iconHtml = `<img src="${imageAsset.url}" style="width: 40px; height: 40px; object-fit: contain; margin-bottom: 5px;" alt="${config.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                           <div style="font-size: 24px; margin-bottom: 5px; display: none;">${config.icon}</div>`;
+            } else {
+                iconHtml = `<div style="font-size: 24px; margin-bottom: 5px;">${config.icon}</div>`;
+            }
+            
             button.innerHTML = `
-                <div style="font-size: 24px; margin-bottom: 5px;">${config.icon}</div>
+                ${iconHtml}
                 <div style="font-size: 14px; font-weight: bold;">${config.name}</div>
                 <div style="font-size: 12px; color: #FFD700;">💰 ${config.cost}</div>
             `;
@@ -2517,6 +2545,8 @@ TowerDefense.Systems.UIManager = class {
             this.updateResourceDisplay();
         }
     }
+
+
 };
 
 // ==================== 游戏引擎 ====================
