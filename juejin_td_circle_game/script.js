@@ -1460,11 +1460,11 @@ TowerDefense.Systems.MapSystem = class {
 
             if (dirtRoadImg && dirtRoadImg.complete) {
                 // 使用土路图片纹理
-                ctx.drawImage(dirtRoadImg, x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+                ctx.drawImage(dirtRoadImg, x, y, this.mapData.gridSize, this.mapData.gridSize);
             } else {
                 // 降级到红色填充
                 ctx.fillStyle = '#FF5252';
-                ctx.fillRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+                ctx.fillRect(x, y, this.mapData.gridSize, this.mapData.gridSize);
             }
 
             // 不再绘制边框
@@ -1492,47 +1492,18 @@ TowerDefense.Systems.MapSystem = class {
         const grassTileImg = game && game.imageManager ? game.imageManager.getImage('grass_tile') : null;
         
         for (let area of this.mapData.buildableAreas) {
-            // 检查是否已有塔
-            const hasTower = TowerDefense.Engine.Game.instance &&
-                TowerDefense.Engine.Game.instance.towers.some(tower =>
-                    tower.active &&
-                    tower.x >= area.x && tower.x <= area.x + area.width &&
-                    tower.y >= area.y && tower.y <= area.y + area.height
-                );
-
-            if (hasTower) {
-                // 已有塔的区域显示为暗化的草地或灰色
-                if (grassTileImg && grassTileImg.complete) {
-                    ctx.globalAlpha = 0.5; // 半透明效果
-                    ctx.drawImage(grassTileImg, area.x, area.y, area.width, area.height);
-                    ctx.globalAlpha = 1.0; // 恢复透明度
-                    
-                    // 添加灰色遮罩
-                    ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
-                    ctx.fillRect(area.x, area.y, area.width, area.height);
-                } else {
-                    // 降级到灰色填充
-                    ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
-                    ctx.fillRect(area.x, area.y, area.width, area.height);
-                }
+            // 始终为可建造区域绘制草地背景
+            if (grassTileImg && grassTileImg.complete) {
+                ctx.drawImage(grassTileImg, area.x, area.y, area.width, area.height);
+                
                 // 不再绘制边框
-                // 用户要求移除格子边框
+                ctx.lineWidth = 0;
             } else {
-                // 可建造区域显示为草地纹理
-                if (grassTileImg && grassTileImg.complete) {
-                    ctx.drawImage(grassTileImg, area.x, area.y, area.width, area.height);
-                    
-                    // 不再绘制边框
-                    // 用户要求格子连接处的边框宽度设置为0
-                    ctx.lineWidth = 0;
-                } else {
-                    // 降级到绿色填充
-                    ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
-                    ctx.fillRect(area.x, area.y, area.width, area.height);
-                    // 不再绘制边框
-                    // 用户要求格子连接处的边框宽度设置为0
-                    ctx.lineWidth = 0;
-                }
+                // 降级到绿色填充
+                ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
+                ctx.fillRect(area.x, area.y, area.width, area.height);
+                // 不再绘制边框
+                ctx.lineWidth = 0;
             }
         }
     }
