@@ -1334,11 +1334,18 @@ TowerDefense.Systems.WaveManager = class {
                 this.endWave();
             }
             
-            // 注释掉自动结束波次的逻辑，让玩家等待倒计时完成
-            // if (this.enemySpawnQueue.length === 0 && 
-            //     TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
-            //     this.endWave();
-            // }
+            // 检查是否清理完所有怪物
+            if (this.enemySpawnQueue.length === 0 && 
+                TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
+                // 如果是最后一波且清理完所有怪物，游戏胜利
+                // currentWave在startNextWave时已经递增，所以最后一波时currentWave等于数组长度
+                if (this.currentWave === TowerDefense.Data.WaveData.length) {
+                    TowerDefense.Engine.Game.instance.gameWin();
+                    return;
+                }
+                // 否则结束当前波次
+                this.endWave();
+            }
         }
     }
 
@@ -1347,8 +1354,8 @@ TowerDefense.Systems.WaveManager = class {
      */
     startWavePreview() {
         if (this.currentWave >= TowerDefense.Data.WaveData.length) {
-            // 游戏胜利
-            TowerDefense.Engine.Game.instance.gameWin();
+            // 已经完成所有波次，但需要等待清理完所有怪物才能胜利
+            // 胜利判断已移至update方法中的怪物清理检查
             return;
         }
         
@@ -1364,8 +1371,8 @@ TowerDefense.Systems.WaveManager = class {
      */
     startNextWave() {
         if (this.currentWave >= TowerDefense.Data.WaveData.length) {
-            // 游戏胜利
-            TowerDefense.Engine.Game.instance.gameWin();
+            // 已经完成所有波次，但需要等待清理完所有怪物才能胜利
+            // 胜利判断已移至update方法中的怪物清理检查
             return;
         }
         
