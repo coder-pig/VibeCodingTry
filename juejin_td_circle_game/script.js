@@ -398,7 +398,7 @@ TowerDefense.Data = {
 
         // 怪物行进路径 - 红色格子 (格子坐标)
         pathGrid: [
-            // 第一行路径 (从左到右)
+            // 第一行路径 (从左到右) - [0,3]是怪物出生点（巢穴）
             [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3],
             // 向下转弯
             [7, 3], [7, 4], [7, 5], [7, 6],
@@ -1453,18 +1453,37 @@ TowerDefense.Systems.MapSystem = class {
     renderPathGrid(ctx) {
         const game = TowerDefense.Engine.Game.instance;
         const dirtRoadImg = game && game.imageManager ? game.imageManager.getImage('dirt_road') : null;
+        const monsterNestImg = game && game.imageManager ? game.imageManager.getImage('monster_nest') : null;
         
         for (let pathGrid of this.mapData.pathGrid) {
             const x = this.mapData.offsetX + pathGrid[0] * this.mapData.gridSize;
             const y = this.mapData.offsetY + pathGrid[1] * this.mapData.gridSize;
 
-            if (dirtRoadImg && dirtRoadImg.complete) {
-                // 使用土路图片纹理
-                ctx.drawImage(dirtRoadImg, x, y, this.mapData.gridSize, this.mapData.gridSize);
+            // 检查是否是怪物出生点[0,3]
+            if (pathGrid[0] === 0 && pathGrid[1] === 3) {
+                // 渲染怪物巢穴
+                if (monsterNestImg && monsterNestImg.complete) {
+                    ctx.drawImage(monsterNestImg, x, y, this.mapData.gridSize, this.mapData.gridSize);
+                } else {
+                    // 降级显示：深红色背景 + 怪物emoji
+                    ctx.fillStyle = '#8B0000';
+                    ctx.fillRect(x, y, this.mapData.gridSize, this.mapData.gridSize);
+                    ctx.font = '30px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#FF6B6B';
+                    ctx.fillText('🕳️', x + this.mapData.gridSize / 2, y + this.mapData.gridSize / 2);
+                }
             } else {
-                // 降级到红色填充
-                ctx.fillStyle = '#FF5252';
-                ctx.fillRect(x, y, this.mapData.gridSize, this.mapData.gridSize);
+                // 普通路径格子
+                if (dirtRoadImg && dirtRoadImg.complete) {
+                    // 使用土路图片纹理
+                    ctx.drawImage(dirtRoadImg, x, y, this.mapData.gridSize, this.mapData.gridSize);
+                } else {
+                    // 降级到红色填充
+                    ctx.fillStyle = '#FF5252';
+                    ctx.fillRect(x, y, this.mapData.gridSize, this.mapData.gridSize);
+                }
             }
 
             // 不再绘制边框
@@ -2732,6 +2751,11 @@ TowerDefense.Engine.Game = class {
             {
                 name: 'grass_tile',
                 url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201642360.png'
+            },
+            // 怪物巢穴图片
+            {
+                name: 'monster_nest',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201828706.png'
             }
         ];
 
