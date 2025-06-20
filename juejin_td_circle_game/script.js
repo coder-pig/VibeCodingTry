@@ -744,19 +744,6 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             ctx.fill();
         }
 
-        // 绘制塔身
-        if (this.towerType === 'support') {
-            // 辅助型塔绘制为圆形
-            ctx.fillStyle = this.config.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            // 攻击型塔和功能型塔绘制为方形
-            ctx.fillStyle = this.config.color;
-            ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-        }
-
         // 绘制塔的图标 - 优先使用图片，降级到emoji
         const game = window.game;
         let useImage = false;
@@ -794,6 +781,22 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
                     this.size, 
                     this.config.icon
                 );
+            }
+        }
+
+        // 只有在没有使用图片时才绘制背景颜色
+        if (!useImage) {
+            // 绘制塔身
+            if (this.towerType === 'support') {
+                // 辅助型塔绘制为圆形
+                ctx.fillStyle = this.config.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // 攻击型塔和功能型塔绘制为方形
+                ctx.fillStyle = this.config.color;
+                ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
             }
         }
         
