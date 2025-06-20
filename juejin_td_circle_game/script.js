@@ -1466,21 +1466,28 @@ TowerDefense.Systems.MapSystem = class {
     }
 
     /**
-     * 渲染路径格子（红色）
+     * 渲染路径格子（土路纹理）
      */
     renderPathGrid(ctx) {
-        ctx.fillStyle = '#FF5252';
-        ctx.strokeStyle = '#D32F2F';
-        ctx.lineWidth = 2;
-
+        const game = TowerDefense.Engine.Game.instance;
+        const dirtRoadImg = game && game.imageManager ? game.imageManager.getImage('dirt_road') : null;
+        
         for (let pathGrid of this.mapData.pathGrid) {
             const x = this.mapData.offsetX + pathGrid[0] * this.mapData.gridSize;
             const y = this.mapData.offsetY + pathGrid[1] * this.mapData.gridSize;
 
-            // 填充红色
-            ctx.fillRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+            if (dirtRoadImg && dirtRoadImg.complete) {
+                // 使用土路图片纹理
+                ctx.drawImage(dirtRoadImg, x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+            } else {
+                // 降级到红色填充
+                ctx.fillStyle = '#FF5252';
+                ctx.fillRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
+            }
 
             // 绘制边框
+            ctx.strokeStyle = '#8B4513'; // 棕色边框更配土路
+            ctx.lineWidth = 1;
             ctx.strokeRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
         }
 
@@ -1523,9 +1530,12 @@ TowerDefense.Systems.MapSystem = class {
     }
 
     /**
-     * 渲染可建造区域格子（绿色）
+     * 渲染可建造区域格子（草地纹理）
      */
     renderBuildableGrid(ctx) {
+        const game = TowerDefense.Engine.Game.instance;
+        const grassTileImg = game && game.imageManager ? game.imageManager.getImage('grass_tile') : null;
+        
         for (let area of this.mapData.buildableAreas) {
             // 检查是否已有塔
             const hasTower = TowerDefense.Engine.Game.instance &&
@@ -1536,18 +1546,39 @@ TowerDefense.Systems.MapSystem = class {
                 );
 
             if (hasTower) {
-                // 已有塔的区域显示为灰色
-                ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
+                // 已有塔的区域显示为暗化的草地或灰色
+                if (grassTileImg && grassTileImg.complete) {
+                    ctx.globalAlpha = 0.5; // 半透明效果
+                    ctx.drawImage(grassTileImg, area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.globalAlpha = 1.0; // 恢复透明度
+                    
+                    // 添加灰色遮罩
+                    ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
+                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                } else {
+                    // 降级到灰色填充
+                    ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
+                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                }
                 ctx.strokeStyle = '#808080';
             } else {
-                // 可建造区域显示为绿色
-                ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
-                ctx.strokeStyle = '#4CAF50';
+                // 可建造区域显示为草地纹理
+                if (grassTileImg && grassTileImg.complete) {
+                    ctx.drawImage(grassTileImg, area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    
+                    // 添加轻微的绿色高亮边框表示可建造
+                    ctx.strokeStyle = '#4CAF50';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                } else {
+                    // 降级到绿色填充
+                    ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
+                    ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                    ctx.strokeStyle = '#4CAF50';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+                }
             }
-
-            ctx.lineWidth = 2;
-            ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
-            ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
         }
     }
 
@@ -2766,6 +2797,15 @@ TowerDefense.Engine.Game = class {
             {
                 name: 'poison_effect',
                 url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251361.png'
+            },
+            // 地图纹理图片
+            {
+                name: 'dirt_road',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201641383.png'
+            },
+            {
+                name: 'grass_tile',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201642360.png'
             }
         ];
 
