@@ -14,7 +14,123 @@ const TowerDefense = {
     // 配置数据
     Data: {},
     // 工具函数
-    Utils: {}
+    Utils: {},
+    // 资源管理
+    Assets: {}
+};
+
+// ==================== 资源管理系统 ====================
+/**
+ * 图片资源管理器
+ */
+TowerDefense.Assets.ImageManager = class {
+    constructor() {
+        this.images = new Map();
+        this.loadingPromises = new Map();
+        this.loadedCount = 0;
+        this.totalCount = 0;
+    }
+
+    /**
+     * 预加载单个图片
+     */
+    async loadImage(name, url) {
+        // 如果已经在缓存中，直接返回
+        if (this.images.has(name)) {
+            return this.images.get(name);
+        }
+
+        // 如果正在加载中，返回加载Promise
+        if (this.loadingPromises.has(name)) {
+            return this.loadingPromises.get(name);
+        }
+
+        // 开始加载图片
+        const loadPromise = new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // 处理跨域
+            
+            img.onload = () => {
+                this.images.set(name, img);
+                this.loadingPromises.delete(name);
+                this.loadedCount++;
+                console.log(`✅ 图片加载成功: ${name}`);
+                resolve(img);
+            };
+            
+            img.onerror = () => {
+                this.loadingPromises.delete(name);
+                console.warn(`❌ 图片加载失败: ${name}`);
+                reject(new Error(`Failed to load image: ${name}`));
+            };
+            
+            img.src = url;
+        });
+
+        this.loadingPromises.set(name, loadPromise);
+        return loadPromise;
+    }
+
+    /**
+     * 批量预加载图片
+     */
+    async loadImages(imageList, onProgress) {
+        this.totalCount = imageList.length;
+        this.loadedCount = 0;
+
+        const promises = imageList.map(async (item) => {
+            try {
+                await this.loadImage(item.name, item.url);
+                if (onProgress) {
+                    onProgress(this.loadedCount, this.totalCount, item.name);
+                }
+            } catch (error) {
+                console.warn(`Failed to load ${item.name}:`, error);
+                if (onProgress) {
+                    onProgress(this.loadedCount, this.totalCount, item.name);
+                }
+            }
+        });
+
+        await Promise.all(promises);
+    }
+
+    /**
+     * 获取缓存的图片
+     */
+    getImage(name) {
+        return this.images.get(name);
+    }
+
+    /**
+     * 检查图片是否已加载
+     */
+    hasImage(name) {
+        return this.images.has(name);
+    }
+
+    /**
+     * 渲染图片（带降级处理）
+     */
+    renderSprite(ctx, imageName, x, y, width, height, fallbackEmoji) {
+        const img = this.getImage(imageName);
+        
+        if (img && img.complete) {
+            // 成功加载图片，正常渲染
+            ctx.drawImage(img, x - width/2, y - height/2, width, height);
+            return true;
+        } else {
+            // 图片未加载或加载失败，使用emoji降级
+            if (fallbackEmoji) {
+                ctx.font = `${height}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'white';
+                ctx.fillText(fallbackEmoji, x, y);
+            }
+            return false;
+        }
+    }
 };
 
 // ==================== 工具函数 ====================
@@ -641,12 +757,54 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
 
-        // 绘制塔的图标
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'white';
-        ctx.fillText(this.config.icon, this.x, this.y);
+        // 绘制塔的图标 - 优先使用图片，降级到emoji
+        const game = window.game;
+        let useImage = false;
+        
+        if (game && game.imageManager) {
+            // 根据塔类型选择对应的图片
+            let imageName = null;
+            if (this.type === 'arrow') {
+                imageName = 'arrow_tower';
+            } else if (this.type === 'cannon') {
+                imageName = 'cannon_tower';
+            } else if (this.type === 'ice') {
+                imageName = 'ice_tower';
+            } else if (this.type === 'poison') {
+                imageName = 'poison_tower';
+            } else if (this.type === 'heroic_totem') {
+                imageName = 'heroic_totem';
+            } else if (this.type === 'speed_beacon') {
+                imageName = 'speed_beacon';
+            } else if (this.type === 'weakness_curse') {
+                imageName = 'weakness_curse';
+            } else if (this.type === 'slow_field') {
+                imageName = 'slow_field';
+            } else if (this.type === 'bank_tower') {
+                imageName = 'bank_tower';
+            }
+            
+            if (imageName) {
+                useImage = game.imageManager.renderSprite(
+                    ctx, 
+                    imageName, 
+                    this.x, 
+                    this.y, 
+                    this.size, 
+                    this.size, 
+                    this.config.icon
+                );
+            }
+        }
+        
+        // 如果没有使用图片，则使用原来的emoji渲染
+        if (!useImage) {
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'white';
+            ctx.fillText(this.config.icon, this.x, this.y);
+        }
 
         // 绘制等级
         if (this.level > 1) {
@@ -868,11 +1026,44 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // 绘制敌人图标
-        ctx.font = `${this.size}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.config.icon, this.x, this.y);
+        // 绘制敌人图标 - 优先使用图片，降级到emoji
+        const game = window.game; // 获取全局游戏实例
+        let useImage = false;
+        
+        if (game && game.imageManager) {
+             // 根据敌人类型选择对应的图片
+             let imageName = null;
+             if (this.config.name === '小鬼') {
+                 imageName = 'grunt';
+             } else if (this.config.name === '狼骑兵') {
+                 imageName = 'runner';
+             } else if (this.config.name === '石头人') {
+                 imageName = 'tank';
+             } else if (this.config.name === 'Boss') {
+                 imageName = 'boss';
+             }
+             // 可以在这里添加更多敌人类型的图片映射
+            
+            if (imageName) {
+                useImage = game.imageManager.renderSprite(
+                    ctx, 
+                    imageName, 
+                    this.x, 
+                    this.y, 
+                    this.size * 2, 
+                    this.size * 2, 
+                    this.config.icon
+                );
+            }
+        }
+        
+        // 如果没有使用图片，则使用原来的emoji渲染
+        if (!useImage) {
+            ctx.font = `${this.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.config.icon, this.x, this.y);
+        }
 
         // 绘制血条
         const barWidth = this.size * 2;
@@ -906,7 +1097,96 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
 };
 
 /**
- * 弹道类
+ * 特效基类
+ */
+TowerDefense.Entities.Effect = class extends TowerDefense.Entities.GameObject {
+    constructor(x, y, type, duration = 1000) {
+        super(x, y);
+        this.type = type;
+        this.duration = duration;
+        this.startTime = Date.now();
+        this.size = 30;
+        this.alpha = 1.0;
+    }
+
+    /**
+     * 更新特效
+     */
+    update(deltaTime) {
+        const elapsed = Date.now() - this.startTime;
+        const progress = elapsed / this.duration;
+        
+        if (progress >= 1) {
+            this.destroy();
+            return;
+        }
+        
+        // 淡出效果
+        this.alpha = 1 - progress;
+        
+        // 爆炸特效会逐渐变大
+        if (this.type === 'explosion') {
+            this.size = 30 + progress * 40;
+        }
+    }
+
+    /**
+     * 渲染特效
+     */
+    render(ctx) {
+        const game = window.game;
+        let useImage = false;
+        
+        if (game && game.imageManager) {
+            // 根据特效类型选择对应的图片
+            let imageName = null;
+            if (this.type === 'explosion') {
+                imageName = 'explosion_effect';
+            } else if (this.type === 'freeze') {
+                imageName = 'freeze_effect';
+            } else if (this.type === 'poison') {
+                imageName = 'poison_effect';
+            }
+            
+            if (imageName) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                useImage = game.imageManager.renderSprite(
+                    ctx, 
+                    imageName, 
+                    this.x, 
+                    this.y, 
+                    this.size, 
+                    this.size, 
+                    null
+                );
+                ctx.restore();
+            }
+        }
+        
+        // 如果没有使用图片，则使用简单的圆形特效
+        if (!useImage) {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            
+            if (this.type === 'explosion') {
+                ctx.fillStyle = '#FF6B35';
+            } else if (this.type === 'freeze') {
+                ctx.fillStyle = '#87CEEB';
+            } else if (this.type === 'poison') {
+                ctx.fillStyle = '#9ACD32';
+            }
+            
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+};
+
+/**
+ * 弹道基类
  */
 TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObject {
     constructor(x, y, target, damage, towerType) {
@@ -994,18 +1274,35 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
             case 'cannon':
                 // 溅射伤害
                 this.applySplashDamage();
+                // 创建爆炸特效
+                this.createEffect('explosion');
                 break;
             case 'ice':
                 // 减速效果
                 this.target.applySlow(this.config.slowEffect, this.config.slowDuration);
+                // 创建冰冻特效
+                this.createEffect('freeze');
                 break;
             case 'poison':
                 // 中毒效果
                 this.target.applyPoison(this.config.poisonDamage, this.config.poisonDuration);
+                // 创建中毒特效
+                this.createEffect('poison');
                 break;
         }
 
         this.destroy();
+    }
+
+    /**
+     * 创建特效
+     */
+    createEffect(type) {
+        const game = TowerDefense.Engine.Game.instance;
+        if (game) {
+            const effect = new TowerDefense.Entities.Effect(this.x, this.y, type, 800);
+            game.effects.push(effect);
+        }
     }
 
     /**
@@ -1034,10 +1331,43 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
      * 渲染弹道
      */
     render(ctx) {
-        ctx.fillStyle = this.config.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        // 优先使用图片，降级到圆形
+        const game = window.game;
+        let useImage = false;
+        
+        if (game && game.imageManager) {
+            // 根据塔类型选择对应的弹道图片
+            let imageName = null;
+            if (this.towerType === 'arrow') {
+                imageName = 'arrow_projectile';
+            } else if (this.towerType === 'cannon') {
+                imageName = 'cannon_projectile';
+            } else if (this.towerType === 'ice') {
+                imageName = 'ice_projectile';
+            } else if (this.towerType === 'poison') {
+                imageName = 'poison_projectile';
+            }
+            
+            if (imageName) {
+                useImage = game.imageManager.renderSprite(
+                    ctx, 
+                    imageName, 
+                    this.x, 
+                    this.y, 
+                    this.size * 2, 
+                    this.size * 2, 
+                    null
+                );
+            }
+        }
+        
+        // 如果没有使用图片，则使用原来的圆形渲染
+        if (!useImage) {
+            ctx.fillStyle = this.config.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 };
 
@@ -2286,11 +2616,15 @@ TowerDefense.Engine.Game = class {
         this.towers = [];
         this.enemies = [];
         this.projectiles = [];
+        this.effects = [];
 
         // 系统
         this.mapSystem = new TowerDefense.Systems.MapSystem();
         this.waveManager = new TowerDefense.Systems.WaveManager();
         this.uiManager = new TowerDefense.Systems.UIManager();
+        
+        // 资源管理
+        this.imageManager = new TowerDefense.Assets.ImageManager();
 
         // Canvas和渲染
         this.canvas = document.getElementById('gameCanvas');
@@ -2303,9 +2637,114 @@ TowerDefense.Engine.Game = class {
     /**
      * 初始化游戏
      */
-    init() {
+    async init() {
+        // 预加载图片资源
+        await this.loadGameAssets();
+        
         this.updateUI();
         this.start();
+    }
+
+    /**
+     * 加载游戏资源
+     */
+    async loadGameAssets() {
+        const imageAssets = [
+            // 敌人图片
+            {
+                name: 'grunt',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201106866.png'
+            },
+            {
+                name: 'runner',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201136287.png'
+            },
+            {
+                name: 'tank',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201138328.png'
+            },
+            {
+                name: 'boss',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201139870.png'
+            },
+            // 塔图片
+            {
+                name: 'arrow_tower',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251345.png'
+            },
+            {
+                name: 'cannon_tower',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251346.png'
+            },
+            {
+                name: 'ice_tower',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251347.png'
+            },
+            {
+                name: 'poison_tower',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251348.png'
+            },
+            {
+                name: 'heroic_totem',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251349.png'
+            },
+            {
+                name: 'speed_beacon',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251351.png'
+            },
+            {
+                name: 'weakness_curse',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251352.png'
+            },
+            {
+                name: 'slow_field',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251353.png'
+            },
+            {
+                name: 'bank_tower',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251354.png'
+            },
+            // 弹道图片
+            {
+                name: 'arrow_projectile',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251355.png'
+            },
+            {
+                name: 'cannon_projectile',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251356.png'
+            },
+            {
+                name: 'ice_projectile',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251357.png'
+            },
+            {
+                name: 'poison_projectile',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251358.png'
+            },
+            // 特效图片
+            {
+                name: 'explosion_effect',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251359.png'
+            },
+            {
+                name: 'freeze_effect',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251360.png'
+            },
+            {
+                name: 'poison_effect',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201251361.png'
+            }
+        ];
+
+        try {
+            console.log('🎮 开始加载游戏资源...');
+            await this.imageManager.loadImages(imageAssets, (loaded, total, name) => {
+                console.log(`📦 资源加载进度: ${loaded}/${total} - ${name}`);
+            });
+            console.log('✅ 所有游戏资源加载完成！');
+        } catch (error) {
+            console.warn('⚠️ 部分资源加载失败，将使用emoji降级显示:', error);
+        }
     }
 
     /**
@@ -2363,10 +2802,18 @@ TowerDefense.Engine.Game = class {
             }
         }
 
+        // 更新特效
+        for (let effect of this.effects) {
+            if (effect.active) {
+                effect.update(deltaTime);
+            }
+        }
+
         // 清理无效对象
         this.towers = this.towers.filter(tower => tower.active);
         this.enemies = this.enemies.filter(enemy => enemy.active);
         this.projectiles = this.projectiles.filter(projectile => projectile.active);
+        this.effects = this.effects.filter(effect => effect.active);
 
         // 检查游戏结束条件 - 圈子里怪物超过50只
         const activeEnemies = this.enemies.filter(enemy => enemy.active).length;
@@ -2403,6 +2850,13 @@ TowerDefense.Engine.Game = class {
         for (let projectile of this.projectiles) {
             if (projectile.active) {
                 projectile.render(this.ctx);
+            }
+        }
+
+        // 渲染特效
+        for (let effect of this.effects) {
+            if (effect.active) {
+                effect.render(this.ctx);
             }
         }
     }
@@ -2486,6 +2940,7 @@ TowerDefense.Engine.Game = class {
         this.towers = [];
         this.enemies = [];
         this.projectiles = [];
+        this.effects = [];
 
         // 重置系统
         this.waveManager = new TowerDefense.Systems.WaveManager();
@@ -2564,9 +3019,10 @@ TowerDefense.Engine.Game = class {
 /**
  * 页面加载完成后初始化游戏
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // 创建游戏实例
     const game = new TowerDefense.Engine.Game();
+    window.game = game; // 设置为全局变量，供其他组件访问
 
     console.log('🎮 TD塔防游戏已启动!');
     console.log('📋 游戏说明:');
