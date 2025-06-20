@@ -52,7 +52,7 @@ TowerDefense.Utils = {
      */
     pointInRect(x, y, rect) {
         return x >= rect.x && x < rect.x + rect.width &&
-               y >= rect.y && y < rect.y + rect.height;
+            y >= rect.y && y < rect.y + rect.height;
     }
 };
 
@@ -279,30 +279,30 @@ TowerDefense.Data = {
         gridRows: 10, // 行数
         offsetX: 100, // X偏移量，让地图居中
         offsetY: 0,   // Y偏移量
-        
+
         // 怪物行进路径 - 红色格子 (格子坐标)
         pathGrid: [
             // 第一行路径 (从左到右)
-            [0,2], [1,2], [2,2], [3,2], [4,2], [5,2], [6,2], [7,2],
+            [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3],
             // 向下转弯
-            [7,3], [7,4], [7,5], [7,6],
+            [7, 3], [7, 4], [7, 5], [7, 6],
             // 第二段路径 (从右到左)
-            [6,6], [5,6], [4,6], [3,6], [2,6],
+            [6, 6], [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6],
             // 向下转弯
-            [2,7], [2,8],
+            [0, 7], [0, 8], [0, 9],
             // 第三段路径 (从左到右)
-            [3,8], [4,8], [5,8], [6,8], [7,8], [8,8], [9,8],
+            [1, 9], [2, 9], [3, 9], [3, 9], [4, 9], [5, 9], [6, 9], [7, 9], [8, 9], [9, 9],
             // 向上转弯到终点
-            [9,7], [9,6], [9,5], [9,4], [9,3], [9,2], [9,1], [9,0],
+            [9, 8], [9, 7], [9, 6], [9, 5], [9, 4], [9, 3], [9, 2], [9, 1], [9, 0],
             // 连接回起点的路径 (从右到左，顶部一行)
-            [8,0], [7,0], [6,0], [5,0], [4,0], [3,0], [2,0], [1,0],
+            [8, 0], [7, 0], [6, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0],
             // 向下回到起点
-            [0,0], [0,1]
+            [0, 0], [0, 1], [0, 2]
         ],
-        
+
         // 怪物行进路径点 - 世界坐标
         pathPoints: [],
-        
+
         // 可建造区域 - 绿色格子 (自动生成，排除路径格子)
         buildableAreas: []
     }
@@ -358,7 +358,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         this.lastAttackTime = 0;
         this.size = 30;
         this.selected = false;
-        
+
         // 辅助型塔和功能型塔的特殊属性
         this.towerType = this.config.type || 'attack'; // attack, support, functional
         this.buffValue = this.config.buffValue || 0;
@@ -375,14 +375,14 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         if (this.towerType === 'attack') {
             this.resetBuffs();
         }
-        
+
         // 重置敌人的负面效果（每帧重新计算）
         for (let enemy of enemies) {
             if (enemy.active) {
                 enemy.resetDebuffs();
             }
         }
-        
+
         // 根据塔类型执行不同逻辑
         switch (this.towerType) {
             case 'attack':
@@ -393,14 +393,14 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
                     this.lastAttackTime = Date.now();
                 }
                 break;
-                
+
             case 'support':
                 // 辅助型塔的逻辑 - 为范围内的攻击塔提供增益
                 this.applySupportBuffs();
                 // 对敌人施加负面效果
                 this.applyEnemyDebuffs(enemies);
                 break;
-                
+
             case 'functional':
                 // 功能型塔的逻辑 - 银行塔产生金币
                 this.generateGold();
@@ -417,7 +417,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
 
         for (let enemy of enemies) {
             if (!enemy.active) continue;
-            
+
             const distance = TowerDefense.Utils.distance(this.x, this.y, enemy.x, enemy.y);
             if (distance <= this.range && distance < closestDistance) {
                 closestDistance = distance;
@@ -436,15 +436,15 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
 
         // 预测目标位置（提高命中率）
         const predictedTarget = this.predictTargetPosition(this.target);
-        
+
         // 创建弹道
         const projectile = new TowerDefense.Entities.Projectile(
             this.x, this.y, predictedTarget, this.damage, this.type
         );
-        
+
         TowerDefense.Engine.Game.instance.addProjectile(projectile);
     }
-    
+
     /**
      * 预测目标位置
      */
@@ -453,30 +453,30 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
         const distance = TowerDefense.Utils.distance(this.x, this.y, target.x, target.y);
         const projectileSpeed = TowerDefense.Data.TowerConfig[this.type].projectileSpeed;
         const flightTime = distance / projectileSpeed;
-        
+
         // 获取目标当前移动方向和速度
         const pathPoints = TowerDefense.Data.MapData.pathPoints;
         if (target.pathIndex >= pathPoints.length - 1) {
             return target; // 如果在路径末端，直接瞄准当前位置
         }
-        
+
         const currentPoint = pathPoints[target.pathIndex];
         const nextPoint = pathPoints[target.pathIndex + 1];
         const dx = nextPoint.x - currentPoint.x;
         const dy = nextPoint.y - currentPoint.y;
         const pathDistance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (pathDistance === 0) {
             return target;
         }
-        
+
         // 计算预测位置
         const targetSpeed = target.speed * target.slowEffect;
         const predictDistance = targetSpeed * flightTime;
-        
+
         const dirX = dx / pathDistance;
         const dirY = dy / pathDistance;
-        
+
         return {
             x: target.x + dirX * predictDistance,
             y: target.y + dirY * predictDistance,
@@ -505,7 +505,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             }
         }
     }
-    
+
     /**
      * 对敌人施加负面效果
      */
@@ -522,7 +522,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             }
         }
     }
-    
+
     /**
      * 功能型塔 - 产生金币
      */
@@ -533,7 +533,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             this.lastGoldTime = now;
         }
     }
-    
+
     /**
      * 重置增益效果
      */
@@ -543,7 +543,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             this.attackSpeed = this.originalStats.attackSpeed;
         }
     }
-    
+
     /**
      * 接收增益效果
      */
@@ -555,7 +555,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
                 attackSpeed: this.config.attackSpeed
             };
         }
-        
+
         switch (buffType) {
             case 'damage':
                 this.damage = this.originalStats.damage * (1 + buffValue);
@@ -571,13 +571,13 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
      */
     upgrade() {
         if (this.level >= 4) return false;
-        
+
         const upgrades = this.config.upgrades;
         const cost = upgrades.cost[this.level - 1];
-        
+
         if (TowerDefense.Engine.Game.instance.gold >= cost) {
             TowerDefense.Engine.Game.instance.gold -= cost;
-            
+
             // 根据塔类型升级不同属性
             if (this.towerType === 'attack') {
                 this.damage = upgrades.damage[this.level - 1];
@@ -589,11 +589,11 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             } else if (this.towerType === 'functional') {
                 this.goldPerSecond = upgrades.goldPerSecond[this.level - 1];
             }
-            
+
             this.level++;
             return true;
         }
-        
+
         return false;
     }
 
@@ -619,7 +619,7 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
             ctx.stroke();
         }
-        
+
         // 为辅助型塔绘制影响范围（半透明圆圈）
         if (this.towerType === 'support' && this.range > 0) {
             ctx.fillStyle = this.config.color + '20'; // 添加透明度
@@ -633,48 +633,48 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
             // 辅助型塔绘制为圆形
             ctx.fillStyle = this.config.color;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
             ctx.fill();
         } else {
             // 攻击型塔和功能型塔绘制为方形
             ctx.fillStyle = this.config.color;
-            ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+            ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
-        
+
         // 绘制塔的图标
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'white';
         ctx.fillText(this.config.icon, this.x, this.y);
-        
+
         // 绘制等级
         if (this.level > 1) {
             ctx.fillStyle = '#FFD700';
             ctx.font = '12px Arial';
-            ctx.fillText(this.level, this.x + this.size/3, this.y - this.size/3);
+            ctx.fillText(this.level, this.x + this.size / 3, this.y - this.size / 3);
         }
-        
+
         // 绘制选中边框
         if (this.selected) {
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 3;
             if (this.towerType === 'support') {
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size/2 + 2, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.size / 2 + 2, 0, Math.PI * 2);
                 ctx.stroke();
             } else {
-                ctx.strokeRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
             }
         }
-        
+
         // 银行塔特殊效果 - 金币飘动动画
         if (this.towerType === 'functional' && this.type === 'bank_tower') {
             const time = Date.now() * 0.003;
             const offsetY = Math.sin(time) * 3;
             ctx.fillStyle = '#FFD700';
             ctx.font = '12px Arial';
-            ctx.fillText('💰', this.x, this.y - this.size/2 - 10 + offsetY);
+            ctx.fillText('💰', this.x, this.y - this.size / 2 - 10 + offsetY);
         }
     }
 
@@ -683,8 +683,8 @@ TowerDefense.Entities.Tower = class extends TowerDefense.Entities.GameObject {
      */
     isClicked(x, y) {
         return TowerDefense.Utils.pointInRect(x, y, {
-            x: this.x - this.size/2,
-            y: this.y - this.size/2,
+            x: this.x - this.size / 2,
+            y: this.y - this.size / 2,
             width: this.size,
             height: this.size
         });
@@ -698,7 +698,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
     constructor(type) {
         const startPoint = TowerDefense.Data.MapData.pathPoints[0];
         super(startPoint.x, startPoint.y);
-        
+
         this.type = type;
         this.config = TowerDefense.Data.EnemyConfig[type];
         this.maxHealth = this.config.health;
@@ -706,17 +706,17 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         this.speed = this.config.speed;
         this.reward = this.config.reward;
         this.size = this.config.size;
-        
+
         this.pathIndex = 0;
         this.pathProgress = 0;
-        
+
         // 状态效果
         this.slowEffect = 1;
         this.slowEndTime = 0;
         this.poisonDamage = 0;
         this.poisonEndTime = 0;
         this.lastPoisonTick = 0;
-        
+
         // 负面效果
         this.defenseDebuff = 1; // 防御力倍数
         this.speedDebuff = 1;   // 速度倍数
@@ -728,7 +728,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
     update(deltaTime) {
         // 处理状态效果
         this.updateStatusEffects();
-        
+
         // 移动（循环移动，不会到达终点）
         this.move(deltaTime);
     }
@@ -738,12 +738,12 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
      */
     updateStatusEffects() {
         const now = Date.now();
-        
+
         // 减速效果
         if (now > this.slowEndTime) {
             this.slowEffect = 1;
         }
-        
+
         // 中毒效果
         if (now < this.poisonEndTime && now - this.lastPoisonTick > 500) {
             this.takeDamage(this.poisonDamage);
@@ -756,28 +756,28 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
      */
     move(deltaTime) {
         const pathPoints = TowerDefense.Data.MapData.pathPoints;
-        
+
         // 如果到达最后一个点，重新开始循环
         if (this.pathIndex >= pathPoints.length - 1) {
             this.pathIndex = 0;
             this.pathProgress = 0;
         }
-        
+
         const currentPoint = pathPoints[this.pathIndex];
         const nextPoint = pathPoints[this.pathIndex + 1];
-        
+
         const dx = nextPoint.x - currentPoint.x;
         const dy = nextPoint.y - currentPoint.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance === 0) {
             this.pathIndex++;
             return;
         }
-        
+
         const moveDistance = this.speed * this.slowEffect * this.speedDebuff * deltaTime / 1000;
         this.pathProgress += moveDistance / distance;
-        
+
         if (this.pathProgress >= 1) {
             this.pathProgress = 0;
             this.pathIndex++;
@@ -800,7 +800,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         this.defenseDebuff = 1;
         this.speedDebuff = 1;
     }
-    
+
     /**
      * 接收负面效果
      */
@@ -822,10 +822,10 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         // 应用防御力减免
         const actualDamage = Math.floor(damage * this.defenseDebuff);
         this.health -= actualDamage;
-        
+
         // 显示伤害数字
         TowerDefense.Engine.Game.instance.showDamageText(this.x, this.y, actualDamage);
-        
+
         if (this.health <= 0) {
             this.die();
         }
@@ -867,27 +867,27 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // 绘制敌人图标
         ctx.font = `${this.size}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.config.icon, this.x, this.y);
-        
+
         // 绘制血条
         const barWidth = this.size * 2;
         const barHeight = 4;
         const barY = this.y - this.size - 8;
-        
+
         // 血条背景
         ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-        ctx.fillRect(this.x - barWidth/2, barY, barWidth, barHeight);
-        
+        ctx.fillRect(this.x - barWidth / 2, barY, barWidth, barHeight);
+
         // 血条前景
         ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
         const healthPercent = this.health / this.maxHealth;
-        ctx.fillRect(this.x - barWidth/2, barY, barWidth * healthPercent, barHeight);
-        
+        ctx.fillRect(this.x - barWidth / 2, barY, barWidth * healthPercent, barHeight);
+
         // 状态效果指示
         if (this.slowEffect < 1) {
             ctx.fillStyle = '#87CEEB';
@@ -895,7 +895,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
             ctx.arc(this.x - this.size, this.y - this.size, 5, 0, Math.PI * 2);
             ctx.fill();
         }
-        
+
         if (Date.now() < this.poisonEndTime) {
             ctx.fillStyle = '#9ACD32';
             ctx.beginPath();
@@ -917,11 +917,11 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
         this.config = TowerDefense.Data.TowerConfig[towerType];
         this.speed = this.config.projectileSpeed;
         this.size = 5;
-        
+
         // 根据塔类型决定弹道行为
         this.isHoming = towerType === 'arrow' || towerType === 'ice'; // 箭塔和寒冰塔使用追踪弹道
         this.homingStrength = 0.8; // 追踪强度
-        
+
         // 计算初始方向
         const angle = TowerDefense.Utils.angle(x, y, target.x, target.y);
         this.vx = Math.cos(angle) * this.speed;
@@ -942,35 +942,35 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
                 // 计算到目标的方向
                 const targetAngle = TowerDefense.Utils.angle(this.x, this.y, this.target.x, this.target.y);
                 const currentAngle = Math.atan2(this.vy, this.vx);
-                
+
                 // 角度差值计算（处理角度环绕）
                 let angleDiff = targetAngle - currentAngle;
                 if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                
+
                 // 平滑转向
                 const turnRate = this.homingStrength * deltaTime / 1000;
                 const newAngle = currentAngle + angleDiff * turnRate;
-                
+
                 // 更新速度向量
                 this.vx = Math.cos(newAngle) * this.speed;
                 this.vy = Math.sin(newAngle) * this.speed;
             }
-            
+
             // 移动
             this.x += this.vx * deltaTime / 1000;
             this.y += this.vy * deltaTime / 1000;
-            
+
             // 改进的碰撞检测
             const distance = TowerDefense.Utils.distance(this.x, this.y, this.target.x, this.target.y);
             const hitRadius = this.target.size + this.size; // 增加碰撞半径
-            
+
             if (distance < hitRadius) {
                 this.hit();
                 return;
             }
         }
-        
+
         // 检查是否超出边界
         if (this.x < 0 || this.x > 800 || this.y < 0 || this.y > 600) {
             this.destroy();
@@ -985,10 +985,10 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
             this.destroy();
             return;
         }
-        
+
         // 造成伤害
         this.target.takeDamage(this.damage);
-        
+
         // 应用特殊效果
         switch (this.towerType) {
             case 'cannon':
@@ -1004,7 +1004,7 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
                 this.target.applyPoison(this.config.poisonDamage, this.config.poisonDuration);
                 break;
         }
-        
+
         this.destroy();
     }
 
@@ -1014,13 +1014,13 @@ TowerDefense.Entities.Projectile = class extends TowerDefense.Entities.GameObjec
     applySplashDamage() {
         const enemies = TowerDefense.Engine.Game.instance.enemies;
         const splashRadius = this.config.splashRadius;
-        
+
         for (let enemy of enemies) {
             if (!enemy.active || enemy === this.target) continue;
-            
+
             const distance = TowerDefense.Utils.distance(this.x, this.y, enemy.x, enemy.y);
             const effectiveRadius = splashRadius + enemy.size; // 考虑敌人大小
-            
+
             if (distance <= effectiveRadius) {
                 // 根据距离计算伤害衰减
                 const damageRatio = Math.max(0.3, 1 - (distance / effectiveRadius));
@@ -1063,11 +1063,11 @@ TowerDefense.Systems.MapSystem = class {
             const worldY = this.mapData.offsetY + pathGrid[1] * this.mapData.gridSize + this.mapData.gridSize / 2;
             this.mapData.pathPoints.push({ x: worldX, y: worldY });
         }
-        
+
         // 生成可建造区域（排除路径格子）
         this.mapData.buildableAreas = [];
         const pathGridSet = new Set(this.mapData.pathGrid.map(grid => `${grid[0]},${grid[1]}`));
-        
+
         for (let row = 0; row < this.mapData.gridRows; row++) {
             for (let col = 0; col < this.mapData.gridCols; col++) {
                 const gridKey = `${col},${row}`;
@@ -1095,13 +1095,13 @@ TowerDefense.Systems.MapSystem = class {
         // 清空画布
         ctx.fillStyle = '#F0F8FF';
         ctx.fillRect(0, 0, this.mapData.width, this.mapData.height);
-        
+
         // 绘制格子背景
         this.renderGrid(ctx);
-        
+
         // 绘制路径格子
         this.renderPathGrid(ctx);
-        
+
         // 绘制可建造区域格子
         this.renderBuildableGrid(ctx);
     }
@@ -1112,7 +1112,7 @@ TowerDefense.Systems.MapSystem = class {
     renderGrid(ctx) {
         ctx.strokeStyle = '#E0E0E0';
         ctx.lineWidth = 1;
-        
+
         // 绘制垂直线
         for (let col = 0; col <= this.mapData.gridCols; col++) {
             const x = this.mapData.offsetX + col * this.mapData.gridSize;
@@ -1121,7 +1121,7 @@ TowerDefense.Systems.MapSystem = class {
             ctx.lineTo(x, this.mapData.offsetY + this.mapData.gridRows * this.mapData.gridSize);
             ctx.stroke();
         }
-        
+
         // 绘制水平线
         for (let row = 0; row <= this.mapData.gridRows; row++) {
             const y = this.mapData.offsetY + row * this.mapData.gridSize;
@@ -1139,18 +1139,18 @@ TowerDefense.Systems.MapSystem = class {
         ctx.fillStyle = '#FF5252';
         ctx.strokeStyle = '#D32F2F';
         ctx.lineWidth = 2;
-        
+
         for (let pathGrid of this.mapData.pathGrid) {
             const x = this.mapData.offsetX + pathGrid[0] * this.mapData.gridSize;
             const y = this.mapData.offsetY + pathGrid[1] * this.mapData.gridSize;
-            
+
             // 填充红色
             ctx.fillRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
-            
+
             // 绘制边框
             ctx.strokeRect(x + 1, y + 1, this.mapData.gridSize - 2, this.mapData.gridSize - 2);
         }
-        
+
         // 绘制路径方向箭头
         this.renderPathArrows(ctx);
     }
@@ -1163,28 +1163,28 @@ TowerDefense.Systems.MapSystem = class {
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
+
         // 从索引1开始，跳过起点[0,2]的箭头绘制
         for (let i = 1; i < this.mapData.pathGrid.length; i++) {
             const current = this.mapData.pathGrid[i];
             // 如果是最后一个点，下一个点是起点（形成循环）
-            const next = i === this.mapData.pathGrid.length - 1 
-                ? this.mapData.pathGrid[0] 
+            const next = i === this.mapData.pathGrid.length - 1
+                ? this.mapData.pathGrid[0]
                 : this.mapData.pathGrid[i + 1];
-            
+
             const x = this.mapData.offsetX + current[0] * this.mapData.gridSize + this.mapData.gridSize / 2;
             const y = this.mapData.offsetY + current[1] * this.mapData.gridSize + this.mapData.gridSize / 2;
-            
+
             // 计算方向
             const dx = next[0] - current[0];
             const dy = next[1] - current[1];
-            
+
             let arrow = '→';
             if (dx > 0) arrow = '→';
             else if (dx < 0) arrow = '←';
             else if (dy > 0) arrow = '↓';
             else if (dy < 0) arrow = '↑';
-            
+
             ctx.fillText(arrow, x, y);
         }
     }
@@ -1195,13 +1195,13 @@ TowerDefense.Systems.MapSystem = class {
     renderBuildableGrid(ctx) {
         for (let area of this.mapData.buildableAreas) {
             // 检查是否已有塔
-            const hasTower = TowerDefense.Engine.Game.instance && 
-                TowerDefense.Engine.Game.instance.towers.some(tower => 
-                    tower.active && 
+            const hasTower = TowerDefense.Engine.Game.instance &&
+                TowerDefense.Engine.Game.instance.towers.some(tower =>
+                    tower.active &&
                     tower.x >= area.x && tower.x <= area.x + area.width &&
                     tower.y >= area.y && tower.y <= area.y + area.height
                 );
-            
+
             if (hasTower) {
                 // 已有塔的区域显示为灰色
                 ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
@@ -1211,7 +1211,7 @@ TowerDefense.Systems.MapSystem = class {
                 ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
                 ctx.strokeStyle = '#4CAF50';
             }
-            
+
             ctx.lineWidth = 2;
             ctx.fillRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
             ctx.strokeRect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
@@ -1225,12 +1225,12 @@ TowerDefense.Systems.MapSystem = class {
         for (let area of this.mapData.buildableAreas) {
             if (TowerDefense.Utils.pointInRect(x, y, area)) {
                 // 检查是否已有塔
-                const hasTower = TowerDefense.Engine.Game.instance.towers.some(tower => 
-                    tower.active && 
+                const hasTower = TowerDefense.Engine.Game.instance.towers.some(tower =>
+                    tower.active &&
                     tower.x >= area.x && tower.x <= area.x + area.width &&
                     tower.y >= area.y && tower.y <= area.y + area.height
                 );
-                
+
                 if (!hasTower) {
                     return {
                         canBuild: true,
@@ -1240,7 +1240,7 @@ TowerDefense.Systems.MapSystem = class {
                 }
             }
         }
-        
+
         return { canBuild: false };
     }
 
@@ -1259,7 +1259,7 @@ TowerDefense.Systems.MapSystem = class {
                 };
             }
         }
-        
+
         return { isValidGrid: false };
     }
 
@@ -1267,14 +1267,14 @@ TowerDefense.Systems.MapSystem = class {
      * 获取指定格子位置的塔
      */
     getTowerAtGrid(gridX, gridY) {
-        const area = this.mapData.buildableAreas.find(area => 
+        const area = this.mapData.buildableAreas.find(area =>
             area.gridX === gridX && area.gridY === gridY
         );
-        
+
         if (!area) return null;
-        
-        return TowerDefense.Engine.Game.instance.towers.find(tower => 
-            tower.active && 
+
+        return TowerDefense.Engine.Game.instance.towers.find(tower =>
+            tower.active &&
             tower.x >= area.x && tower.x <= area.x + area.width &&
             tower.y >= area.y && tower.y <= area.y + area.height
         ) || null;
@@ -1305,14 +1305,14 @@ TowerDefense.Systems.WaveManager = class {
     update() {
         const now = Date.now();
         const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
-        
+
         // 每秒增加1金币，考虑倍速
         const goldInterval = 1000 / gameSpeed;
         if (now - this.lastGoldTime >= goldInterval) {
             TowerDefense.Engine.Game.instance.gold += 1;
             this.lastGoldTime = now;
         }
-        
+
         if (!this.waveInProgress && !this.showingPreview) {
             // 检查是否开始下一波预告
             if (now >= this.nextWaveTime) {
@@ -1327,15 +1327,15 @@ TowerDefense.Systems.WaveManager = class {
         } else {
             // 生成敌人
             this.spawnEnemies();
-            
+
             // 检查波次时间限制，考虑倍速
             const adjustedWaveTimeLimit = this.waveTimeLimit / gameSpeed;
             if (now >= this.waveStartTime + adjustedWaveTimeLimit) {
                 this.endWave();
             }
-            
+
             // 检查是否清理完所有怪物
-            if (this.enemySpawnQueue.length === 0 && 
+            if (this.enemySpawnQueue.length === 0 &&
                 TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length === 0) {
                 // 如果是最后一波且清理完所有怪物，游戏胜利
                 // currentWave在startNextWave时已经递增，所以最后一波时currentWave等于数组长度
@@ -1358,14 +1358,14 @@ TowerDefense.Systems.WaveManager = class {
             // 胜利判断已移至update方法中的怪物清理检查
             return;
         }
-        
+
         this.showingPreview = true;
         this.previewStartTime = Date.now();
-        
+
         // 更新UI显示预告信息
         this.updateUI();
     }
-    
+
     /**
      * 开始下一波
      */
@@ -1375,16 +1375,16 @@ TowerDefense.Systems.WaveManager = class {
             // 胜利判断已移至update方法中的怪物清理检查
             return;
         }
-        
+
         this.showingPreview = false;
         this.waveInProgress = true;
         this.waveStartTime = Date.now();
-        
+
         // 准备敌人生成队列，考虑倍速
         const waveData = TowerDefense.Data.WaveData[this.currentWave];
         const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
         this.enemySpawnQueue = [];
-        
+
         for (let enemyGroup of waveData.enemies) {
             for (let i = 0; i < enemyGroup.count; i++) {
                 this.enemySpawnQueue.push({
@@ -1393,12 +1393,12 @@ TowerDefense.Systems.WaveManager = class {
                 });
             }
         }
-        
+
         // 按时间排序
         this.enemySpawnQueue.sort((a, b) => a.spawnTime - b.spawnTime);
-        
+
         this.currentWave++;
-        
+
         // 更新UI
         this.updateUI();
     }
@@ -1408,7 +1408,7 @@ TowerDefense.Systems.WaveManager = class {
      */
     spawnEnemies() {
         const now = Date.now();
-        
+
         while (this.enemySpawnQueue.length > 0 && this.enemySpawnQueue[0].spawnTime <= now) {
             const enemyData = this.enemySpawnQueue.shift();
             const enemy = new TowerDefense.Entities.Enemy(enemyData.type);
@@ -1422,18 +1422,18 @@ TowerDefense.Systems.WaveManager = class {
     endWave() {
         this.waveInProgress = false;
         this.showingPreview = false;
-        
+
         // 清空剩余的敌人生成队列
         this.enemySpawnQueue = [];
-        
+
         // 波次奖励
         const bonus = this.currentWave * 10;
         TowerDefense.Engine.Game.instance.gold += bonus;
         TowerDefense.Engine.Game.instance.score += bonus * 5;
-        
+
         // 设置下一波预告时间（立即开始预告）
         this.nextWaveTime = Date.now() + 1000; // 1秒后开始预告
-        
+
         this.updateUI();
     }
 
@@ -1447,12 +1447,12 @@ TowerDefense.Systems.WaveManager = class {
             const adjustedPreparationTime = this.preparationTime / gameSpeed;
             const timeBonus = Math.floor((this.previewStartTime + adjustedPreparationTime - Date.now()) / 1000);
             TowerDefense.Engine.Game.instance.gold += timeBonus;
-            
+
             // 立即开始下一波
             this.startNextWave();
         }
     }
-    
+
     /**
      * 获取下一波敌人预告信息
      */
@@ -1460,10 +1460,10 @@ TowerDefense.Systems.WaveManager = class {
         if (this.currentWave >= TowerDefense.Data.WaveData.length) {
             return null;
         }
-        
+
         const waveData = TowerDefense.Data.WaveData[this.currentWave];
         const enemyTypes = [];
-        
+
         for (let enemyGroup of waveData.enemies) {
             const config = TowerDefense.Data.EnemyConfig[enemyGroup.type];
             enemyTypes.push({
@@ -1472,7 +1472,7 @@ TowerDefense.Systems.WaveManager = class {
                 count: enemyGroup.count
             });
         }
-        
+
         return {
             waveNumber: this.currentWave + 1,
             enemies: enemyTypes
@@ -1488,17 +1488,17 @@ TowerDefense.Systems.WaveManager = class {
         const waveCountdownEl = document.getElementById('waveCountdown');
         const nextWaveBtn = document.getElementById('nextWaveBtn');
         const wavePreviewEl = document.getElementById('wavePreview');
-        
+
         if (waveNumberEl) {
             waveNumberEl.textContent = `波次: ${this.currentWave}`;
         }
-        
+
         if (enemiesLeftEl) {
             const activeEnemies = TowerDefense.Engine.Game.instance.enemies.filter(e => e.active).length;
             const queuedEnemies = this.enemySpawnQueue.length;
             enemiesLeftEl.textContent = `剩余敌人: ${activeEnemies + queuedEnemies}`;
         }
-        
+
         // 更新波次预告显示
         if (wavePreviewEl) {
             if (this.showingPreview) {
@@ -1506,11 +1506,11 @@ TowerDefense.Systems.WaveManager = class {
                 if (preview) {
                     const titleEl = wavePreviewEl.querySelector('.preview-title');
                     const contentEl = wavePreviewEl.querySelector('.preview-content');
-                    
+
                     if (titleEl) {
                         titleEl.textContent = `📢 第${preview.waveNumber}波即将到来！`;
                     }
-                    
+
                     if (contentEl) {
                         let enemyText = '敌人类型:\n';
                         preview.enemies.forEach((enemy, index) => {
@@ -1519,7 +1519,7 @@ TowerDefense.Systems.WaveManager = class {
                         });
                         contentEl.textContent = enemyText;
                     }
-                    
+
                     wavePreviewEl.style.display = 'block';
                 } else {
                     wavePreviewEl.style.display = 'none';
@@ -1528,10 +1528,10 @@ TowerDefense.Systems.WaveManager = class {
                 wavePreviewEl.style.display = 'none';
             }
         }
-        
+
         if (waveCountdownEl && nextWaveBtn) {
             const gameSpeed = TowerDefense.Engine.Game.instance.gameSpeed;
-            
+
             if (this.waveInProgress) {
                 const adjustedWaveTimeLimit = this.waveTimeLimit / gameSpeed;
                 const timeLeft = Math.max(0, Math.ceil((this.waveStartTime + adjustedWaveTimeLimit - Date.now()) / 1000));
@@ -1584,21 +1584,21 @@ TowerDefense.Systems.UIManager = class {
                 TowerDefense.Engine.Game.instance.togglePause();
             });
         }
-        
+
         const speedBtn = document.getElementById('speedBtn');
         if (speedBtn) {
             speedBtn.addEventListener('click', () => {
                 TowerDefense.Engine.Game.instance.toggleSpeed();
             });
         }
-        
+
         const restartBtn = document.getElementById('restartBtn');
         if (restartBtn) {
             restartBtn.addEventListener('click', () => {
                 TowerDefense.Engine.Game.instance.restart();
             });
         }
-        
+
         // 下一波按钮
         const nextWaveBtn = document.getElementById('nextWaveBtn');
         if (nextWaveBtn) {
@@ -1606,7 +1606,7 @@ TowerDefense.Systems.UIManager = class {
                 TowerDefense.Engine.Game.instance.waveManager.startNextWaveEarly();
             });
         }
-        
+
         // 塔操作按钮
         const upgradeTowerBtn = document.getElementById('upgradeTowerBtn');
         if (upgradeTowerBtn) {
@@ -1618,7 +1618,7 @@ TowerDefense.Systems.UIManager = class {
                 }
             });
         }
-        
+
         const sellTowerBtn = document.getElementById('sellTowerBtn');
         if (sellTowerBtn) {
             sellTowerBtn.addEventListener('click', () => {
@@ -1629,7 +1629,7 @@ TowerDefense.Systems.UIManager = class {
                 }
             });
         }
-        
+
         // 游戏结束界面按钮
         const playAgainBtn = document.getElementById('playAgainBtn');
         if (playAgainBtn) {
@@ -1647,7 +1647,7 @@ TowerDefense.Systems.UIManager = class {
         if (this.selectedTower) {
             this.selectedTower.selected = false;
         }
-        
+
         this.selectedTower = tower;
         if (tower) {
             tower.selected = true;
@@ -1694,18 +1694,18 @@ TowerDefense.Systems.UIManager = class {
      */
     updateTowerInfo() {
         if (!this.selectedTower) return;
-        
+
         const tower = this.selectedTower;
-        
+
         document.getElementById('towerLevel').textContent = tower.level;
         document.getElementById('towerDamage').textContent = tower.damage;
         document.getElementById('towerRange').textContent = tower.range;
         document.getElementById('towerSpeed').textContent = tower.attackSpeed.toFixed(1);
-        
+
         // 更新升级按钮
         const upgradeBtn = document.getElementById('upgradeTowerBtn');
         const sellBtn = document.getElementById('sellTowerBtn');
-        
+
         if (tower.level >= 4) {
             upgradeBtn.textContent = '已满级';
             upgradeBtn.disabled = true;
@@ -1714,7 +1714,7 @@ TowerDefense.Systems.UIManager = class {
             upgradeBtn.textContent = `⬆️ 升级 (💰 ${upgradeCost})`;
             upgradeBtn.disabled = TowerDefense.Engine.Game.instance.gold < upgradeCost;
         }
-        
+
         const sellPrice = Math.floor(tower.config.cost * 0.7 * tower.level);
         sellBtn.textContent = `💸 出售 (💰 ${sellPrice})`;
     }
@@ -1724,21 +1724,21 @@ TowerDefense.Systems.UIManager = class {
      */
     updateResourceDisplay() {
         const game = TowerDefense.Engine.Game.instance;
-        
+
         const goldEl = document.getElementById('goldAmount');
         const monstersEl = document.getElementById('monstersInCircle');
         const scoreEl = document.getElementById('scoreAmount');
-        
+
         if (goldEl) goldEl.textContent = `💰 ${game.gold}`;
         if (monstersEl) {
             const activeEnemies = game.enemies.filter(enemy => enemy.active).length;
             monstersEl.textContent = `👹 ${activeEnemies}/${game.maxMonstersInCircle}`;
         }
         if (scoreEl) scoreEl.textContent = `🏆 ${game.score}`;
-        
+
         // 塔建造按钮状态更新已移除，改为弹窗选择模式
         // 按钮状态在弹窗显示时动态更新
-        
+
         // 更新塔信息面板
         if (this.selectedTower) {
             this.updateTowerInfo();
@@ -1752,20 +1752,20 @@ TowerDefense.Systems.UIManager = class {
         // 获取画布的位置信息
         const canvas = document.getElementById('gameCanvas');
         const rect = canvas.getBoundingClientRect();
-        
+
         const damageEl = document.createElement('div');
         damageEl.className = 'damage-text';
         damageEl.textContent = `-${damage}`;
-        
+
         // 计算相对于页面的绝对位置
         const absoluteX = rect.left + x;
         const absoluteY = rect.top + y;
-        
+
         damageEl.style.left = `${absoluteX}px`;
         damageEl.style.top = `${absoluteY}px`;
-        
+
         document.body.appendChild(damageEl);
-        
+
         setTimeout(() => {
             if (damageEl.parentNode) {
                 damageEl.parentNode.removeChild(damageEl);
@@ -1794,7 +1794,7 @@ TowerDefense.Systems.UIManager = class {
             display: none;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         `;
-        
+
         // 创建标题
         const title = document.createElement('h3');
         title.textContent = '🏗️ 选择要建造的塔';
@@ -1805,7 +1805,7 @@ TowerDefense.Systems.UIManager = class {
             font-size: 18px;
         `;
         modal.appendChild(title);
-        
+
         // 创建塔选择按钮容器
         const buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = `
@@ -1815,7 +1815,7 @@ TowerDefense.Systems.UIManager = class {
             margin-bottom: 15px;
             max-width: 600px;
         `;
-        
+
         // 为每种塔类型创建按钮
         const towerTypes = ['arrow', 'cannon', 'ice', 'poison', 'heroic_totem', 'speed_beacon', 'weakness_curse', 'slow_field', 'bank_tower'];
         towerTypes.forEach(towerType => {
@@ -1839,28 +1839,28 @@ TowerDefense.Systems.UIManager = class {
                 text-align: center;
                 min-width: 120px;
             `;
-            
+
             // 添加悬停效果
             button.addEventListener('mouseenter', () => {
                 button.style.borderColor = '#FFD700';
                 button.style.transform = 'scale(1.05)';
             });
-            
+
             button.addEventListener('mouseleave', () => {
                 button.style.borderColor = '#555';
                 button.style.transform = 'scale(1)';
             });
-            
+
             // 添加点击事件
             button.addEventListener('click', () => {
                 this.buildTowerFromModal(towerType);
             });
-            
+
             buttonContainer.appendChild(button);
         });
-        
+
         modal.appendChild(buttonContainer);
-        
+
         // 创建取消按钮
         const cancelButton = document.createElement('button');
         cancelButton.textContent = '❌ 取消';
@@ -1874,16 +1874,16 @@ TowerDefense.Systems.UIManager = class {
             width: 100%;
             font-size: 14px;
         `;
-        
+
         cancelButton.addEventListener('click', () => {
             this.hideTowerSelectionModal();
         });
-        
+
         modal.appendChild(cancelButton);
-        
+
         // 添加到页面
         document.body.appendChild(modal);
-        
+
         // 点击弹窗外部关闭
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -1898,20 +1898,20 @@ TowerDefense.Systems.UIManager = class {
     showTowerSelectionModal(buildX, buildY) {
         // 先隐藏其他弹窗
         this.hideTowerInfoModal();
-        
+
         this.modalBuildX = buildX;
         this.modalBuildY = buildY;
-        
+
         const modal = document.getElementById('towerSelectionModal');
         if (modal) {
             modal.style.display = 'block';
-            
+
             // 更新按钮状态（根据金币数量）
             const game = TowerDefense.Engine.Game.instance;
             modal.querySelectorAll('.modal-tower-btn').forEach(btn => {
                 const towerType = btn.dataset.tower;
                 const cost = TowerDefense.Data.TowerConfig[towerType].cost;
-                
+
                 if (game.gold < cost) {
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
@@ -1941,7 +1941,7 @@ TowerDefense.Systems.UIManager = class {
     buildTowerFromModal(towerType) {
         const game = TowerDefense.Engine.Game.instance;
         const config = TowerDefense.Data.TowerConfig[towerType];
-        
+
         if (game.gold >= config.cost) {
             game.buildTower(towerType, this.modalBuildX, this.modalBuildY);
             this.hideTowerSelectionModal();
@@ -1970,7 +1970,7 @@ TowerDefense.Systems.UIManager = class {
             box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
             min-width: 300px;
         `;
-        
+
         // 创建标题
         const title = document.createElement('h3');
         title.id = 'modalTowerTitle';
@@ -1981,7 +1981,7 @@ TowerDefense.Systems.UIManager = class {
             font-size: 18px;
         `;
         modal.appendChild(title);
-        
+
         // 创建塔信息容器
         const infoContainer = document.createElement('div');
         infoContainer.style.cssText = `
@@ -1989,7 +1989,7 @@ TowerDefense.Systems.UIManager = class {
             margin-bottom: 15px;
             line-height: 1.6;
         `;
-        
+
         infoContainer.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                 <div>🏆 等级: <span id="modalTowerLevel">1</span></div>
@@ -1998,9 +1998,9 @@ TowerDefense.Systems.UIManager = class {
                 <div>⚡ 攻速: <span id="modalTowerSpeed">1.0</span></div>
             </div>
         `;
-        
+
         modal.appendChild(infoContainer);
-        
+
         // 创建按钮容器
         const buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = `
@@ -2009,7 +2009,7 @@ TowerDefense.Systems.UIManager = class {
             gap: 10px;
             margin-bottom: 10px;
         `;
-        
+
         // 创建升级按钮
         const upgradeButton = document.createElement('button');
         upgradeButton.id = 'modalUpgradeBtn';
@@ -2023,13 +2023,13 @@ TowerDefense.Systems.UIManager = class {
             font-size: 14px;
             transition: all 0.3s ease;
         `;
-        
+
         upgradeButton.addEventListener('click', () => {
             this.upgradeTowerFromModal();
         });
-        
+
         buttonContainer.appendChild(upgradeButton);
-        
+
         // 创建出售按钮
         const sellButton = document.createElement('button');
         sellButton.id = 'modalSellBtn';
@@ -2043,15 +2043,15 @@ TowerDefense.Systems.UIManager = class {
             font-size: 14px;
             transition: all 0.3s ease;
         `;
-        
+
         sellButton.addEventListener('click', () => {
             this.sellTowerFromModal();
         });
-        
+
         buttonContainer.appendChild(sellButton);
-        
+
         modal.appendChild(buttonContainer);
-        
+
         // 创建关闭按钮
         const closeButton = document.createElement('button');
         closeButton.textContent = '❌ 关闭';
@@ -2065,16 +2065,16 @@ TowerDefense.Systems.UIManager = class {
             width: 100%;
             font-size: 14px;
         `;
-        
+
         closeButton.addEventListener('click', () => {
             this.hideTowerInfoModal();
         });
-        
+
         modal.appendChild(closeButton);
-        
+
         // 添加到页面
         document.body.appendChild(modal);
-        
+
         // 点击弹窗外部关闭
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -2089,21 +2089,21 @@ TowerDefense.Systems.UIManager = class {
     showTowerInfoModal(tower) {
         // 先隐藏其他弹窗
         this.hideTowerSelectionModal();
-        
+
         // 清除之前选中的塔的状态
         if (this.modalSelectedTower && this.modalSelectedTower !== tower) {
             this.modalSelectedTower.selected = false;
         }
-        
+
         this.modalSelectedTower = tower;
         // 设置当前塔为选中状态
         tower.selected = true;
-        
+
         const modal = document.getElementById('towerInfoModal');
         if (!modal) {
             this.createTowerInfoModal();
         }
-        
+
         // 更新塔信息
         const config = tower.config;
         document.getElementById('modalTowerTitle').textContent = `${config.icon} ${config.name}`;
@@ -2111,7 +2111,7 @@ TowerDefense.Systems.UIManager = class {
         document.getElementById('modalTowerDamage').textContent = tower.damage;
         document.getElementById('modalTowerRange').textContent = tower.range;
         document.getElementById('modalTowerSpeed').textContent = tower.attackSpeed.toFixed(1);
-        
+
         // 更新升级按钮
         const upgradeBtn = document.getElementById('modalUpgradeBtn');
         if (tower.level >= 4) {
@@ -2125,12 +2125,12 @@ TowerDefense.Systems.UIManager = class {
             upgradeBtn.disabled = game.gold < upgradeCost;
             upgradeBtn.style.opacity = upgradeBtn.disabled ? '0.5' : '1';
         }
-        
+
         // 更新出售按钮
         const sellBtn = document.getElementById('modalSellBtn');
         const sellPrice = Math.floor(config.cost * 0.7 * tower.level);
         sellBtn.textContent = `💸 出售 (💰 ${sellPrice})`;
-        
+
         // 显示弹窗
         document.getElementById('towerInfoModal').style.display = 'block';
     }
@@ -2143,7 +2143,7 @@ TowerDefense.Systems.UIManager = class {
         if (modal) {
             modal.style.display = 'none';
         }
-        
+
         // 清除塔的选中状态
         if (this.modalSelectedTower) {
             this.modalSelectedTower.selected = false;
@@ -2157,7 +2157,7 @@ TowerDefense.Systems.UIManager = class {
     upgradeTowerFromModal() {
         if (this.modalSelectedTower) {
             const tower = this.modalSelectedTower;
-            
+
             if (tower.level < 4) {
                 // 直接调用塔的upgrade方法，它会处理金币检查和扣除
                 if (tower.upgrade()) {
@@ -2176,10 +2176,10 @@ TowerDefense.Systems.UIManager = class {
             const game = TowerDefense.Engine.Game.instance;
             const tower = this.modalSelectedTower;
             const sellPrice = Math.floor(tower.config.cost * 0.7 * tower.level);
-            
+
             game.gold += sellPrice;
             tower.active = false;
-            
+
             this.hideTowerInfoModal();
             this.updateResourceDisplay();
         }
@@ -2208,12 +2208,12 @@ TowerDefense.Engine.InputManager = class {
             this.mouseX = e.clientX - rect.left;
             this.mouseY = e.clientY - rect.top;
         });
-        
+
         this.canvas.addEventListener('click', (e) => {
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             this.handleClick(x, y);
         });
     }
@@ -2224,7 +2224,7 @@ TowerDefense.Engine.InputManager = class {
     handleClick(x, y) {
         const game = TowerDefense.Engine.Game.instance;
         const uiManager = game.uiManager;
-        
+
         // 优先检查是否点击了绿色区域（可建造区域）
         const gridResult = game.mapSystem.getGridAt(x, y);
         if (gridResult.isValidGrid) {
@@ -2246,7 +2246,7 @@ TowerDefense.Engine.InputManager = class {
                     break;
                 }
             }
-            
+
             if (clickedTower) {
                 // 选择塔（保持原有的选择逻辑）
                 uiManager.selectTower(clickedTower);
@@ -2270,33 +2270,33 @@ TowerDefense.Engine.Game = class {
             return TowerDefense.Engine.Game.instance;
         }
         TowerDefense.Engine.Game.instance = this;
-        
+
         // 游戏状态
         this.isRunning = false;
         this.isPaused = false;
         this.gameSpeed = 1;
         this.lastTime = 0;
-        
+
         // 游戏数据
         this.gold = 500;
         this.score = 0;
         this.maxMonstersInCircle = 50; // 圈子里最大怪物数量
-        
+
         // 游戏对象
         this.towers = [];
         this.enemies = [];
         this.projectiles = [];
-        
+
         // 系统
         this.mapSystem = new TowerDefense.Systems.MapSystem();
         this.waveManager = new TowerDefense.Systems.WaveManager();
         this.uiManager = new TowerDefense.Systems.UIManager();
-        
+
         // Canvas和渲染
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.inputManager = new TowerDefense.Engine.InputManager(this.canvas);
-        
+
         this.init();
     }
 
@@ -2322,16 +2322,16 @@ TowerDefense.Engine.Game = class {
      */
     gameLoop(currentTime = performance.now()) {
         if (!this.isRunning) return;
-        
+
         const deltaTime = (currentTime - this.lastTime) * this.gameSpeed;
         this.lastTime = currentTime;
-        
+
         if (!this.isPaused) {
             this.update(deltaTime);
         }
-        
+
         this.render();
-        
+
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
@@ -2341,39 +2341,39 @@ TowerDefense.Engine.Game = class {
     update(deltaTime) {
         // 更新波次管理
         this.waveManager.update();
-        
+
         // 更新塔
         for (let tower of this.towers) {
             if (tower.active) {
                 tower.update(deltaTime, this.enemies);
             }
         }
-        
+
         // 更新敌人
         for (let enemy of this.enemies) {
             if (enemy.active) {
                 enemy.update(deltaTime);
             }
         }
-        
+
         // 更新弹道
         for (let projectile of this.projectiles) {
             if (projectile.active) {
                 projectile.update(deltaTime);
             }
         }
-        
+
         // 清理无效对象
         this.towers = this.towers.filter(tower => tower.active);
         this.enemies = this.enemies.filter(enemy => enemy.active);
         this.projectiles = this.projectiles.filter(projectile => projectile.active);
-        
+
         // 检查游戏结束条件 - 圈子里怪物超过50只
         const activeEnemies = this.enemies.filter(enemy => enemy.active).length;
         if (activeEnemies > this.maxMonstersInCircle) {
             this.gameOver();
         }
-        
+
         // 更新UI
         this.updateUI();
     }
@@ -2384,21 +2384,21 @@ TowerDefense.Engine.Game = class {
     render() {
         // 渲染地图
         this.mapSystem.render(this.ctx);
-        
+
         // 渲染塔
         for (let tower of this.towers) {
             if (tower.active) {
                 tower.render(this.ctx);
             }
         }
-        
+
         // 渲染敌人
         for (let enemy of this.enemies) {
             if (enemy.active) {
                 enemy.render(this.ctx);
             }
         }
-        
+
         // 渲染弹道
         for (let projectile of this.projectiles) {
             if (projectile.active) {
@@ -2412,16 +2412,16 @@ TowerDefense.Engine.Game = class {
      */
     buildTower(type, x, y) {
         const config = TowerDefense.Data.TowerConfig[type];
-        
+
         if (this.gold >= config.cost) {
             this.gold -= config.cost;
             const tower = new TowerDefense.Entities.Tower(x, y, type);
             this.towers.push(tower);
-            
+
             this.updateUI();
             return true;
         }
-        
+
         return false;
     }
 
@@ -2464,7 +2464,7 @@ TowerDefense.Engine.Game = class {
         const speeds = [1, 2, 4];
         const currentIndex = speeds.indexOf(this.gameSpeed);
         this.gameSpeed = speeds[(currentIndex + 1) % speeds.length];
-        
+
         const speedBtn = document.getElementById('speedBtn');
         if (speedBtn) {
             speedBtn.textContent = `⚡ ${this.gameSpeed}x`;
@@ -2481,33 +2481,33 @@ TowerDefense.Engine.Game = class {
         this.isPaused = false;
         this.gameSpeed = 1;
         this.isRunning = false; // 先停止当前游戏循环
-        
+
         // 清空游戏对象
         this.towers = [];
         this.enemies = [];
         this.projectiles = [];
-        
+
         // 重置系统
         this.waveManager = new TowerDefense.Systems.WaveManager();
         this.uiManager.deselectTower();
         this.uiManager.hideTowerSelectionModal();
         this.uiManager.hideTowerInfoModal();
-        
+
         // 隐藏游戏结束界面
         const gameOverScreen = document.getElementById('gameOverScreen');
         if (gameOverScreen) {
             gameOverScreen.style.display = 'none';
         }
-        
+
         // 重置UI
         const pauseBtn = document.getElementById('pauseBtn');
         if (pauseBtn) pauseBtn.textContent = '⏸️ 暂停';
-        
+
         const speedBtn = document.getElementById('speedBtn');
         if (speedBtn) speedBtn.textContent = '⚡ 1x';
-        
+
         this.updateUI();
-        
+
         // 重新启动游戏循环
         this.start();
     }
@@ -2536,16 +2536,16 @@ TowerDefense.Engine.Game = class {
         const gameOverTitle = document.getElementById('gameOverTitle');
         const finalScore = document.getElementById('finalScore');
         const finalWave = document.getElementById('finalWave');
-        
+
         if (gameOverScreen) {
             gameOverScreen.style.display = 'flex';
         }
-        
+
         if (gameOverTitle) {
             gameOverTitle.textContent = isWin ? '🎉 胜利!' : '💀 失败! 怪物太多了!';
             gameOverTitle.style.color = isWin ? '#4CAF50' : '#F44336';
         }
-        
+
         if (finalScore) finalScore.textContent = this.score;
         if (finalWave) finalWave.textContent = this.waveManager.currentWave;
     }
@@ -2567,7 +2567,7 @@ TowerDefense.Engine.Game = class {
 document.addEventListener('DOMContentLoaded', () => {
     // 创建游戏实例
     const game = new TowerDefense.Engine.Game();
-    
+
     console.log('🎮 TD塔防游戏已启动!');
     console.log('📋 游戏说明:');
     console.log('- 点击绿色区域建造塔');
