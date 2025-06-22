@@ -334,6 +334,7 @@ TowerDefense.Data = {
 
     // 敌人配置
     EnemyConfig: {
+        // 基础敌人
         grunt: {
             name: '小鬼',
             health: 50,
@@ -369,21 +370,199 @@ TowerDefense.Data = {
             icon: '👺',
             color: '#8B0000',
             size: 25
+        },
+        // 新增敌人类型
+        assassin: {
+            name: '刺客',
+            health: 40,
+            speed: 150,
+            reward: 20,
+            icon: '🥷',
+            color: '#2F4F4F',
+            size: 13
+        },
+        heavy_armor: {
+            name: '重甲兵',
+            health: 200,
+            speed: 25,
+            reward: 30,
+            icon: '🛡️',
+            color: '#4682B4',
+            size: 22
+        },
+        flying_demon: {
+            name: '飞行怪',
+            health: 80,
+            speed: 100,
+            reward: 25,
+            icon: '🦇',
+            color: '#800080',
+            size: 16
+        },
+        healer: {
+            name: '治疗师',
+            health: 60,
+            speed: 50,
+            reward: 35,
+            icon: '⚕️',
+            color: '#32CD32',
+            size: 17
+        },
+        berserker: {
+            name: '狂战士',
+            health: 120,
+            speed: 80,
+            reward: 40,
+            icon: '⚔️',
+            color: '#DC143C',
+            size: 19
+        },
+        giant: {
+            name: '巨人',
+            health: 300,
+            speed: 20,
+            reward: 50,
+            icon: '🗿',
+            color: '#8B4513',
+            size: 28
+        },
+        ghost: {
+            name: '幽灵',
+            health: 70,
+            speed: 90,
+            reward: 30,
+            icon: '👻',
+            color: '#F0F8FF',
+            size: 15
+        },
+        dragon: {
+            name: '龙',
+            health: 400,
+            speed: 60,
+            reward: 80,
+            icon: '🐉',
+            color: '#FF4500',
+            size: 30
+        },
+        necromancer: {
+            name: '死灵法师',
+            health: 100,
+            speed: 45,
+            reward: 60,
+            icon: '🧙‍♂️',
+            color: '#4B0082',
+            size: 18
+        },
+        demon: {
+            name: '恶魔',
+            health: 250,
+            speed: 55,
+            reward: 70,
+            icon: '😈',
+            color: '#8B0000',
+            size: 24
+        },
+        elemental: {
+            name: '元素',
+            health: 180,
+            speed: 70,
+            reward: 45,
+            icon: '🔥',
+            color: '#FF6347',
+            size: 20
+        },
+        golem: {
+            name: '魔像',
+            health: 350,
+            speed: 15,
+            reward: 65,
+            icon: '🗿',
+            color: '#696969',
+            size: 26
+        },
+        vampire: {
+            name: '吸血鬼',
+            health: 160,
+            speed: 85,
+            reward: 55,
+            icon: '🧛‍♂️',
+            color: '#8B0000',
+            size: 19
+        },
+        lich: {
+            name: '巫妖',
+            health: 280,
+            speed: 35,
+            reward: 90,
+            icon: '💀',
+            color: '#2F4F4F',
+            size: 23
+        },
+        titan: {
+            name: '泰坦',
+            health: 600,
+            speed: 30,
+            reward: 120,
+            icon: '⚡',
+            color: '#FFD700',
+            size: 32
+        },
+        final_boss: {
+            name: '终极Boss',
+            health: 1000,
+            speed: 25,
+            reward: 200,
+            icon: '👹',
+            color: '#8B0000',
+            size: 35
         }
     },
 
-    // 波次数据
+    // 波次数据 - 30波设计
     WaveData: [
+        // 第1-5波：基础教学阶段
         { enemies: [{ type: 'grunt', count: 5, interval: 1000 }] },
         { enemies: [{ type: 'grunt', count: 8, interval: 800 }] },
         { enemies: [{ type: 'grunt', count: 6, interval: 1000 }, { type: 'runner', count: 3, interval: 1500 }] },
         { enemies: [{ type: 'grunt', count: 10, interval: 600 }, { type: 'runner', count: 5, interval: 1200 }] },
         { enemies: [{ type: 'grunt', count: 8, interval: 800 }, { type: 'tank', count: 2, interval: 2000 }] },
-        { enemies: [{ type: 'grunt', count: 12, interval: 500 }, { type: 'runner', count: 6, interval: 1000 }, { type: 'tank', count: 3, interval: 1800 }] },
-        { enemies: [{ type: 'grunt', count: 15, interval: 400 }, { type: 'runner', count: 8, interval: 800 }, { type: 'tank', count: 4, interval: 1500 }] },
-        { enemies: [{ type: 'grunt', count: 10, interval: 600 }, { type: 'runner', count: 10, interval: 700 }, { type: 'tank', count: 5, interval: 1200 }] },
-        { enemies: [{ type: 'grunt', count: 20, interval: 300 }, { type: 'runner', count: 12, interval: 600 }, { type: 'tank', count: 6, interval: 1000 }] },
-        { enemies: [{ type: 'grunt', count: 15, interval: 500 }, { type: 'runner', count: 10, interval: 800 }, { type: 'tank', count: 8, interval: 1000 }, { type: 'boss', count: 1, interval: 5000 }] }
+        
+        // 第6-10波：进阶阶段，引入新敌人
+        { enemies: [{ type: 'grunt', count: 12, interval: 500 }, { type: 'runner', count: 6, interval: 1000 }, { type: 'assassin', count: 2, interval: 2000 }] },
+        { enemies: [{ type: 'grunt', count: 15, interval: 400 }, { type: 'runner', count: 8, interval: 800 }, { type: 'tank', count: 3, interval: 1500 }, { type: 'assassin', count: 3, interval: 1800 }] },
+        { enemies: [{ type: 'grunt', count: 10, interval: 600 }, { type: 'runner', count: 10, interval: 700 }, { type: 'heavy_armor', count: 2, interval: 2500 }] },
+        { enemies: [{ type: 'grunt', count: 20, interval: 300 }, { type: 'runner', count: 12, interval: 600 }, { type: 'tank', count: 4, interval: 1200 }, { type: 'flying_demon', count: 3, interval: 2000 }] },
+        { enemies: [{ type: 'grunt', count: 15, interval: 500 }, { type: 'runner', count: 10, interval: 800 }, { type: 'tank', count: 6, interval: 1000 }, { type: 'boss', count: 1, interval: 5000 }] },
+        
+        // 第11-15波：中级挑战
+        { enemies: [{ type: 'grunt', count: 18, interval: 400 }, { type: 'assassin', count: 6, interval: 1000 }, { type: 'heavy_armor', count: 3, interval: 2000 }, { type: 'healer', count: 2, interval: 3000 }] },
+        { enemies: [{ type: 'runner', count: 15, interval: 500 }, { type: 'tank', count: 8, interval: 1200 }, { type: 'flying_demon', count: 5, interval: 1500 }, { type: 'berserker', count: 3, interval: 2500 }] },
+        { enemies: [{ type: 'grunt', count: 25, interval: 300 }, { type: 'assassin', count: 8, interval: 800 }, { type: 'ghost', count: 4, interval: 1800 }, { type: 'giant', count: 2, interval: 4000 }] },
+        { enemies: [{ type: 'heavy_armor', count: 6, interval: 1000 }, { type: 'berserker', count: 5, interval: 1500 }, { type: 'flying_demon', count: 8, interval: 1200 }, { type: 'healer', count: 3, interval: 2500 }] },
+        { enemies: [{ type: 'tank', count: 10, interval: 800 }, { type: 'ghost', count: 6, interval: 1400 }, { type: 'giant', count: 3, interval: 3000 }, { type: 'dragon', count: 1, interval: 6000 }] },
+        
+        // 第16-20波：高级挑战
+        { enemies: [{ type: 'assassin', count: 12, interval: 600 }, { type: 'berserker', count: 8, interval: 1000 }, { type: 'necromancer', count: 3, interval: 2000 }, { type: 'elemental', count: 4, interval: 1800 }] },
+        { enemies: [{ type: 'heavy_armor', count: 10, interval: 800 }, { type: 'giant', count: 5, interval: 2000 }, { type: 'demon', count: 3, interval: 2500 }, { type: 'vampire', count: 4, interval: 1500 }] },
+        { enemies: [{ type: 'flying_demon', count: 15, interval: 500 }, { type: 'ghost', count: 10, interval: 1000 }, { type: 'dragon', count: 2, interval: 4000 }, { type: 'golem', count: 2, interval: 5000 }] },
+        { enemies: [{ type: 'berserker', count: 12, interval: 700 }, { type: 'necromancer', count: 6, interval: 1500 }, { type: 'elemental', count: 8, interval: 1200 }, { type: 'lich', count: 2, interval: 4000 }] },
+        { enemies: [{ type: 'giant', count: 8, interval: 1500 }, { type: 'demon', count: 6, interval: 2000 }, { type: 'vampire', count: 8, interval: 1200 }, { type: 'boss', count: 2, interval: 6000 }] },
+        
+        // 第21-25波：专家级挑战
+        { enemies: [{ type: 'dragon', count: 4, interval: 2000 }, { type: 'golem', count: 4, interval: 2500 }, { type: 'lich', count: 3, interval: 3000 }, { type: 'titan', count: 1, interval: 8000 }] },
+        { enemies: [{ type: 'necromancer', count: 10, interval: 1000 }, { type: 'elemental', count: 12, interval: 800 }, { type: 'vampire', count: 10, interval: 1200 }, { type: 'demon', count: 8, interval: 1800 }] },
+        { enemies: [{ type: 'ghost', count: 20, interval: 400 }, { type: 'flying_demon', count: 15, interval: 600 }, { type: 'dragon', count: 5, interval: 2000 }, { type: 'golem', count: 3, interval: 3500 }] },
+        { enemies: [{ type: 'giant', count: 12, interval: 1000 }, { type: 'lich', count: 6, interval: 2000 }, { type: 'titan', count: 2, interval: 6000 }, { type: 'boss', count: 3, interval: 5000 }] },
+        { enemies: [{ type: 'demon', count: 15, interval: 800 }, { type: 'vampire', count: 12, interval: 1000 }, { type: 'dragon', count: 8, interval: 1500 }, { type: 'golem', count: 6, interval: 2500 }] },
+        
+        // 第26-29波：终极挑战
+        { enemies: [{ type: 'elemental', count: 20, interval: 500 }, { type: 'lich', count: 10, interval: 1200 }, { type: 'titan', count: 4, interval: 4000 }, { type: 'dragon', count: 6, interval: 2000 }] },
+        { enemies: [{ type: 'golem', count: 10, interval: 1500 }, { type: 'demon', count: 18, interval: 700 }, { type: 'vampire', count: 15, interval: 900 }, { type: 'boss', count: 4, interval: 4000 }] },
+        { enemies: [{ type: 'titan', count: 6, interval: 2500 }, { type: 'dragon', count: 10, interval: 1200 }, { type: 'lich', count: 8, interval: 1800 }, { type: 'final_boss', count: 1, interval: 10000 }] },
+        { enemies: [{ type: 'giant', count: 20, interval: 600 }, { type: 'golem', count: 15, interval: 1000 }, { type: 'titan', count: 8, interval: 2000 }, { type: 'boss', count: 6, interval: 3000 }] },
+        
+        // 第30波：最终Boss战
+        { enemies: [{ type: 'final_boss', count: 3, interval: 8000 }, { type: 'titan', count: 10, interval: 1500 }, { type: 'dragon', count: 15, interval: 1000 }, { type: 'lich', count: 12, interval: 1200 }, { type: 'demon', count: 20, interval: 500 }] }
     ],
 
     // 地图数据 - 10x10格子地图
@@ -1033,7 +1212,26 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
         const game = window.game; // 获取全局游戏实例
         let useImage = false;
         
-        if (game && game.imageManager) {
+        // 检查icon是否为URL
+        if (this.config.icon.startsWith('http')) {
+            // 如果是URL，直接创建图片对象并渲染
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            // 检查图片是否已经加载
+            if (this.iconImage && this.iconImage.complete && this.iconImage.src === this.config.icon) {
+                // 图片已加载，直接渲染
+                ctx.drawImage(this.iconImage, this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+                useImage = true;
+            } else if (!this.iconImage || this.iconImage.src !== this.config.icon) {
+                // 图片未加载或URL变化，重新加载
+                this.iconImage = img;
+                img.src = this.config.icon;
+                img.onload = () => {
+                    // 图片加载完成后会在下一帧渲染
+                };
+            }
+        } else if (game && game.imageManager) {
              // 根据敌人类型选择对应的图片
              let imageName = null;
              if (this.config.name === '小鬼') {
@@ -1044,8 +1242,39 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
                  imageName = 'tank';
              } else if (this.config.name === 'Boss') {
                  imageName = 'boss';
+             } else if (this.config.name === '刺客') {
+                 imageName = 'assassin';
+             } else if (this.config.name === '重甲兵') {
+                 imageName = 'heavy_armor';
+             } else if (this.config.name === '飞行怪') {
+                 imageName = 'flying_demon';
+             } else if (this.config.name === '治疗师') {
+                 imageName = 'healer';
+             } else if (this.config.name === '狂战士') {
+                 imageName = 'berserker';
+             } else if (this.config.name === '巨人') {
+                 imageName = 'giant';
+             } else if (this.config.name === '幽灵') {
+                 imageName = 'ghost';
+             } else if (this.config.name === '龙') {
+                 imageName = 'dragon';
+             } else if (this.config.name === '死灵法师') {
+                 imageName = 'necromancer';
+             } else if (this.config.name === '恶魔') {
+                 imageName = 'demon';
+             } else if (this.config.name === '元素') {
+                 imageName = 'elemental';
+             } else if (this.config.name === '魔像') {
+                 imageName = 'golem';
+             } else if (this.config.name === '吸血鬼') {
+                 imageName = 'vampire';
+             } else if (this.config.name === '巫妖') {
+                 imageName = 'lich';
+             } else if (this.config.name === '泰坦') {
+                 imageName = 'titan';
+             } else if (this.config.name === '终极Boss') {
+                 imageName = 'final_boss';
              }
-             // 可以在这里添加更多敌人类型的图片映射
             
             if (imageName) {
                 useImage = game.imageManager.renderSprite(
@@ -1065,6 +1294,7 @@ TowerDefense.Entities.Enemy = class extends TowerDefense.Entities.GameObject {
             ctx.font = `${this.size}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'white';
             ctx.fillText(this.config.icon, this.x, this.y);
         }
 
@@ -2675,6 +2905,71 @@ TowerDefense.Engine.Game = class {
             {
                 name: 'boss',
                 url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506201139870.png'
+            },
+            // 新增敌人图片
+            {
+                name: 'assassin',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245116.png'
+            },
+            {
+                name: 'heavy_armor',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245115.png'
+            },
+            {
+                name: 'flying_demon',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245114.png'
+            },
+            {
+                name: 'healer',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245113.png'
+            },
+            {
+                name: 'berserker',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245112.png'
+            },
+            {
+                name: 'giant',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245111.png'
+            },
+            {
+                name: 'ghost',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/2025062222245110.png'
+            },
+            {
+                name: 'dragon',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224519.png'
+            },
+            {
+                name: 'necromancer',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224518.png'
+            },
+            {
+                name: 'demon',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224517.png'
+            },
+            {
+                name: 'elemental',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224516.png'
+            },
+            {
+                name: 'golem',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224515.png'
+            },
+            {
+                name: 'vampire',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224514.png'
+            },
+            {
+                name: 'lich',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224513.png'
+            },
+            {
+                name: 'titan',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224512.png'
+            },
+            {
+                name: 'final_boss',
+                url: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/202506222224511.png'
             },
             // 塔图片
             {
