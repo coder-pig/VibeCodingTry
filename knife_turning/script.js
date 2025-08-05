@@ -7,8 +7,8 @@
  */
 const GameConfig = {
     canvas: {
-        desktop: { width: 800, height: 600 },
-        mobile: { aspectRatio: 16/10, minWidth: 320 }
+        desktop: { width: 375, height: 667 },
+        mobile: { aspectRatio: 9/16, minWidth: 320 }
     },
     mobile: {
         joystickSize: 80,
@@ -142,13 +142,12 @@ class VirtualJoystick {
      * 设置事件监听器
      */
     setupEventListeners() {
-        // 触摸开始
+        // 触摸事件
         this.base.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.handleTouchStart(e.touches[0]);
         }, { passive: false });
         
-        // 触摸移动
         document.addEventListener('touchmove', (e) => {
             if (this.isActive) {
                 e.preventDefault();
@@ -156,33 +155,49 @@ class VirtualJoystick {
             }
         }, { passive: false });
         
-        // 触摸结束
         document.addEventListener('touchend', () => {
+            this.handleTouchEnd();
+        });
+        
+        // 鼠标事件（桌面端支持）
+        this.base.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.handleTouchStart(e);
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (this.isActive) {
+                e.preventDefault();
+                this.handleTouchMove(e);
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
             this.handleTouchEnd();
         });
     }
     
     /**
-     * 处理触摸开始事件
-     * @param {Touch} touch - 触摸对象
+     * 处理触摸/鼠标开始事件
+     * @param {Touch|MouseEvent} event - 触摸或鼠标事件对象
      */
-    handleTouchStart(touch) {
+    handleTouchStart(event) {
         this.isActive = true;
         const rect = this.base.getBoundingClientRect();
         this.centerX = rect.left + rect.width / 2;
         this.centerY = rect.top + rect.height / 2;
-        this.handleTouchMove(touch);
+        this.handleTouchMove(event);
     }
     
     /**
-     * 处理触摸移动事件
-     * @param {Touch} touch - 触摸对象
+     * 处理触摸/鼠标移动事件
+     * @param {Touch|MouseEvent} event - 触摸或鼠标事件对象
      */
-    handleTouchMove(touch) {
+    handleTouchMove(event) {
         if (!this.isActive) return;
         
-        const deltaX = touch.clientX - this.centerX;
-        const deltaY = touch.clientY - this.centerY;
+        const deltaX = event.clientX - this.centerX;
+        const deltaY = event.clientY - this.centerY;
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         
         if (distance <= this.maxDistance) {
@@ -246,9 +261,8 @@ class InputManager {
         
         this.setupKeyboardListeners();
         
-        if (this.isMobile) {
-            this.setupMobileControls();
-        }
+        // 总是设置移动端控制，让虚拟摇杆在桌面端也能工作
+        this.setupMobileControls();
     }
     
     /**
@@ -281,17 +295,23 @@ class InputManager {
     getMovementDirection() {
         let x = 0, y = 0;
         
-        if (this.isMobile && this.joystick) {
+        // 优先使用虚拟摇杆输入
+        if (this.joystick) {
             const direction = this.joystick.getDirection();
             x = direction.x;
             y = direction.y;
-        } else {
-            // 键盘控制
-            if (this.keys['KeyW'] || this.keys['ArrowUp']) y -= 1;
-            if (this.keys['KeyS'] || this.keys['ArrowDown']) y += 1;
-            if (this.keys['KeyA'] || this.keys['ArrowLeft']) x -= 1;
-            if (this.keys['KeyD'] || this.keys['ArrowRight']) x += 1;
+            
+            // 如果摇杆有输入，直接返回（已经标准化）
+            if (Math.abs(x) > 0.01 || Math.abs(y) > 0.01) {
+                return { x, y };
+            }
         }
+        
+        // 如果没有摇杆输入，使用键盘控制
+        if (this.keys['KeyW'] || this.keys['ArrowUp']) y -= 1;
+        if (this.keys['KeyS'] || this.keys['ArrowDown']) y += 1;
+        if (this.keys['KeyA'] || this.keys['ArrowLeft']) x -= 1;
+        if (this.keys['KeyD'] || this.keys['ArrowRight']) x += 1;
         
         // 标准化方向向量
         const magnitude = Math.sqrt(x * x + y * y);

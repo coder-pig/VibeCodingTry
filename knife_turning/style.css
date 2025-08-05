@@ -35,49 +35,56 @@ body {
     border-radius: 10px;
     background: #2d5016;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-    max-width: 100vw;
-    max-height: 80vh;
+    max-width: 95vw;
+    max-height: 85vh;
+    width: 375px;
+    height: 667px;
 }
 
 /* 游戏UI界面 */
 #gameUI {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 10px;
+    left: 10px;
     z-index: 100;
-    padding: 10px;
+    width: auto;
+    max-width: 150px;
 }
 
 .ui-top {
     display: flex;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
 }
 
 /* 血量条和经验条样式 */
 .health-bar, .exp-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-width: 150px;
+    gap: 4px;
+    width: 100%;
+    max-width: 130px;
 }
 
 .bar-label {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     color: #ffd700;
-    min-width: 40px;
+    min-width: 25px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .bar-container {
-    width: 100px;
-    height: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid #ffd700;
-    border-radius: 10px;
+    width: 70px;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #ffd700;
+    border-radius: 8px;
     overflow: hidden;
     position: relative;
 }
@@ -101,15 +108,19 @@ body {
 /* 等级和武器计数显示 */
 .level-display, .weapon-count {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 11px;
     color: #ffd700;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 5px 10px;
-    border-radius: 15px;
-    border: 2px solid #ffd700;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 3px 6px;
+    border-radius: 8px;
+    border: 1px solid #ffd700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    width: 100%;
+    max-width: 130px;
+    text-align: center;
 }
 
-/* 虚拟摇杆样式 (移动端) */
+/* 虚拟摇杆样式 (移动端和桌面端测试) */
 .joystick-container {
     position: absolute;
     bottom: 30px;
@@ -117,7 +128,7 @@ body {
     width: 80px;
     height: 80px;
     z-index: 200;
-    display: none;
+    display: block; /* 默认显示，方便桌面端测试 */
 }
 
 .joystick-base {
