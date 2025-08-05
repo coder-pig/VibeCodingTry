@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>转刀游戏 - Knife Turning Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 游戏容器 -->
+    <div id="gameContainer">
+        <!-- 游戏状态栏 -->
+        <div id="gameUI">
+            <div class="ui-top">
+                <div class="health-bar">
+                    <div class="bar-label">血量</div>
+                    <div class="bar-container">
+                        <div id="healthBar" class="bar health"></div>
+                    </div>
+                    <span id="healthText">100/100</span>
+                </div>
+                <div class="exp-bar">
+                    <div class="bar-label">经验</div>
+                    <div class="bar-container">
+                        <div id="expBar" class="bar experience"></div>
+                    </div>
+                    <span id="expText">0/100</span>
+                </div>
+                <div class="level-display">
+                    <span>等级: </span><span id="levelText">1</span>
+                </div>
+                <div class="weapon-count">
+                    <span>刀具: </span><span id="weaponCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 虚拟摇杆 (移动端) -->
+        <div id="virtualJoystick" class="joystick-container">
+            <div class="joystick-base">
+                <div class="joystick-knob"></div>
+            </div>
+        </div>
+
+        <!-- 技能选择弹窗 -->
+        <div id="skillModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>选择技能升级</h2>
+                <div class="skill-options">
+                    <div class="skill-card" data-skill="0">
+                        <div class="skill-icon">🔄</div>
+                        <div class="skill-name">刀生成速度</div>
+                        <div class="skill-desc">更快生成新武器</div>
+                    </div>
+                    <div class="skill-card" data-skill="1">
+                        <div class="skill-icon">🏃</div>
+                        <div class="skill-name">移动速度增加</div>
+                        <div class="skill-desc">提升移动速度</div>
+                    </div>
+                    <div class="skill-card" data-skill="2">
+                        <div class="skill-icon">❤️</div>
+                        <div class="skill-name">血量增加</div>
+                        <div class="skill-desc">立即恢复血量</div>
+                    </div>
+                    <div class="skill-card" data-skill="3">
+                        <div class="skill-icon">⚔️</div>
+                        <div class="skill-name">刀生成数量+1</div>
+                        <div class="skill-desc">每次生成更多武器</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏结束弹窗 -->
+        <div id="gameOverModal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="gameOverTitle">游戏结束</h2>
+                <div id="gameOverStats">
+                    <p>最终等级: <span id="finalLevel">1</span></p>
+                    <p>击杀数量: <span id="killCount">0</span></p>
+                    <p>存活时间: <span id="survivalTime">0</span>秒</p>
+                </div>
+                <button id="restartBtn" class="game-btn">重新开始</button>
+            </div>
+        </div>
+
+        <!-- 开始游戏按钮 -->
+        <div id="startScreen" class="modal">
+            <div class="modal-content">
+                <h1>转刀游戏</h1>
+                <p>控制角色移动，用旋转的刀具击败怪物！</p>
+                <p class="controls-hint">
+                    <span class="desktop-hint">桌面端: WASD 或方向键移动</span>
+                    <span class="mobile-hint">移动端: 使用虚拟摇杆控制</span>
+                </p>
+                <button id="startBtn" class="game-btn">开始游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏脚本 -->
+    <script src="script.js"></script>
+</body>
+</html>

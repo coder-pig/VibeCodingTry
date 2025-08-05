@@ -68,15 +68,15 @@ class MarkdownConverter {
             
             // 在AI主题下使用url.html的样式
             if (theme === 'ai') {
-                return `<br><ul class="list-paddingleft-1">
-    <li style="box-sizing: border-box;">
+                return `<br><div class="link-style">
+    <div style="box-sizing: border-box;">
         <p style="text-align: left;box-sizing: border-box;"><span
                 style="font-size: 12px;color: rgb(51, 105, 232);box-sizing: border-box;font-weight: bold;">${text}<br
                     style="box-sizing: border-box;"></span><span
                 style="font-size: 12px;color: rgba(74, 71, 71, 0.59);box-sizing: border-box;">${href}</span>
         </p>
-    </li>
-</ul><br>`;
+    </div>
+</div><br>`;
             }
             
             // 默认样式
@@ -92,14 +92,15 @@ class MarkdownConverter {
             let proxiedHref = href;
             
             // 检测是否需要代理（常见的防盗链域名）
-            const needsProxy = /\.(yuque\.com|notion\.so|feishu\.cn|dingtalk\.com|aliyun\.com|qpic\.cn)/i.test(href);
+            const needsProxy = /\.(yuque\.com|notion\.so|feishu\.cn|dingtalk\.com|aliyun\.com|qpic\.cn|nlark\.com)/i.test(href);
             
             if (needsProxy) {
                 // 使用多个代理服务，提高成功率
                 const proxyServices = [
                     'https://images.weserv.nl/?url=',
-                    'https://pic1.xuehuaimg.com/proxy/',
-                    'https://cors-anywhere.azm.workers.dev/'
+                    'https://imageproxy.pimg.tw/resize?url=',
+                    'https://wsrv.nl/?url=',
+                    'https://cdn.jsdelivr.net/gh/justjavac/proxy@main/'
                 ];
                 
                 // 随机选择一个代理服务
@@ -261,7 +262,7 @@ ${content}</tr>
     }
 
     /**
-     * 预处理markdown文本，修复加粗语法问题
+     * 预处理markdown文本，修复加粗语法和无序列表识别问题
      */
     preprocessMarkdown(text) {
         // 修复末尾有空格的加粗语法问题，如：**UI设计稿 ** -> **UI设计稿**
@@ -276,7 +277,52 @@ ${content}</tr>
         processedText = processedText.replace(/\*\*\s+([^*]+?)\*\*/g, '**$1**')
                                    .replace(/\*\s+([^*]+?)\*/g, '*$1*');
         
-        return processedText;
+        // 改进的无序列表处理逻辑
+        // 1. 统一无序列表标记格式：确保列表标记后只有一个空格
+        processedText = processedText.replace(/^(\s*)([+\-*])\s*/gm, '$1$2 ');
+        
+        // 2. 处理列表项前的缩进，保持结构层次
+        processedText = processedText.replace(/^(\s{0,3})([+\-*])\s+/gm, '$1$2 ');
+        
+        // 3. 确保无序列表前有空行（如果前面不是空行或列表项）
+        processedText = processedText.replace(/([^\n\s])\n([+\-*]\s+)/g, '$1\n\n$2');
+        
+        // 4. 确保连续的无序列表项之间格式正确
+        processedText = processedText.replace(/^([+\-*]\s+.+)$/gm, (match) => {
+            return match.trim();
+        });
+        
+        // 5. 处理长列表项：确保多行内容正确格式化
+        const lines = processedText.split('\n');
+        const result = [];
+        let inList = false;
+        let listIndent = '';
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const isListItem = /^(\s*)([+\-*])\s+/.test(line);
+            
+            if (isListItem) {
+                // 这是一个列表项
+                inList = true;
+                const indent = line.match(/^(\s*)/)[1];
+                listIndent = indent;
+                result.push(line);
+            } else if (inList && line.trim() && !line.match(/^(\s*)([+\-*])\s+/) && line.startsWith(' ')) {
+                // 这是列表项的续行内容，保持缩进
+                result.push(line);
+            } else if (line.trim() === '') {
+                // 空行
+                result.push(line);
+            } else {
+                // 非列表内容
+                inList = false;
+                listIndent = '';
+                result.push(line);
+            }
+        }
+        
+        return result.join('\n');
     }
 
     /**
@@ -431,7 +477,7 @@ ${cleanHtml}
                 h2: 'position: relative; font-size: 20px; font-weight: bold; color: #5a78ea; margin: 20px 0 15px 0; padding: 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center;',
                 h3: 'font-size: 16px; font-weight: bold; color: #5a78ea; margin: 16px 0 10px 0; letter-spacing: 1.5px; line-height: 1.75; text-align: center; position: relative;',
                 p: 'margin: 12px 0; text-align: justify; font-size: 15px; line-height: 1.75; letter-spacing: 1.5px;',
-                strong: 'color: #e74c3c; font-weight: bold; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
+                strong: 'color: #333; font-weight: bold; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
                 em: 'color: #8e44ad; font-style: italic; letter-spacing: 1.5px; line-height: 1.75; display: inline;',
                 blockquote: 'margin: 15px 0; padding: 15px 20px; background: #f8f9fa; border-left: 4px solid #5a78ea; border-radius: 0 8px 8px 0; color: #555; font-size: 15px; line-height: 1.5; letter-spacing: 0.5px;',
                 code: 'background: #f1f2f6; color: #e74c3c; padding: 2px 6px; border-radius: 4px; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace; font-size: 15px; letter-spacing: 0.5px;',
@@ -521,23 +567,7 @@ ${cleanHtml}
             'li': styles.li
         };
 
-        // 特殊处理：将列表项中的strong元素和后续内容合并到同一个section中
-        const listItems = tempDiv.querySelectorAll('li');
-        listItems.forEach(li => {
-            const strongElement = li.querySelector('strong');
-            if (strongElement) {
-                // 创建一个新的section来包装所有内容
-                const wrapperSection = document.createElement('section');
-                
-                // 将li的所有子节点移动到新的section中
-                while (li.firstChild) {
-                    wrapperSection.appendChild(li.firstChild);
-                }
-                
-                // 将新的section添加回li中
-                li.appendChild(wrapperSection);
-            }
-        });
+        // 移除了有问题的列表项特殊处理代码，因为它会破坏列表的正常渲染
 
         Object.keys(elements).forEach(tag => {
             const tagElements = tempDiv.querySelectorAll(tag);
@@ -545,36 +575,54 @@ ${cleanHtml}
                 if (elements[tag]) {
                     element.style.cssText = elements[tag];
                 }
-                // 特殊处理strong元素：在前后添加空格
+                // 智能处理strong元素空格：避免在标点符号前后添加不必要的空格
                 if (tag === 'strong') {
-                    // 检查前面是否已经有空格或者是段落开头
+                    // 定义不需要添加空格的字符（标点符号、括号等）
+                    const noSpaceChars = /[""''「」『』（）()[\]{}，。、；：！？,.;:!?]/;
+                    
+                    // 检查前面是否需要添加空格
                     const prevSibling = element.previousSibling;
                     if (prevSibling && prevSibling.nodeType === Node.TEXT_NODE) {
                         const prevText = prevSibling.textContent;
-                        if (prevText && !prevText.endsWith(' ') && !prevText.endsWith('\n')) {
+                        const lastChar = prevText.slice(-1);
+                        // 只有当前面不是空格、换行符或标点符号时才添加空格
+                        if (prevText && !prevText.endsWith(' ') && !prevText.endsWith('\n') && 
+                            !noSpaceChars.test(lastChar) && /\S/.test(lastChar)) {
                             prevSibling.textContent = prevText + ' ';
                         }
                     } else if (prevSibling && prevSibling.nodeType === Node.ELEMENT_NODE) {
-                        // 如果前面是元素节点，在strong前插入空格文本节点
-                        const spaceNode = document.createTextNode(' ');
-                        element.parentNode.insertBefore(spaceNode, element);
+                        // 如果前面是元素节点，检查该元素的最后文本内容
+                        const prevElementText = prevSibling.textContent || '';
+                        const lastChar = prevElementText.slice(-1);
+                        if (prevElementText && !noSpaceChars.test(lastChar) && /\S/.test(lastChar)) {
+                            const spaceNode = document.createTextNode(' ');
+                            element.parentNode.insertBefore(spaceNode, element);
+                        }
                     }
                     
-                    // 检查后面是否已经有空格或者是段落结尾
+                    // 检查后面是否需要添加空格
                     const nextSibling = element.nextSibling;
                     if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
                         const nextText = nextSibling.textContent;
-                        if (nextText && !nextText.startsWith(' ') && !nextText.startsWith('\n')) {
+                        const firstChar = nextText.charAt(0);
+                        // 只有当后面不是空格、换行符或标点符号时才添加空格
+                        if (nextText && !nextText.startsWith(' ') && !nextText.startsWith('\n') && 
+                            !noSpaceChars.test(firstChar) && /\S/.test(firstChar)) {
                             nextSibling.textContent = ' ' + nextText;
                         }
                     } else if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE) {
-                        // 如果后面是元素节点，在strong后插入空格文本节点
-                        const spaceNode = document.createTextNode(' ');
-                        element.parentNode.insertBefore(spaceNode, nextSibling);
+                        // 如果后面是元素节点，检查该元素的第一个文本内容
+                        const nextElementText = nextSibling.textContent || '';
+                        const firstChar = nextElementText.charAt(0);
+                        if (nextElementText && !noSpaceChars.test(firstChar) && /\S/.test(firstChar)) {
+                            const spaceNode = document.createTextNode(' ');
+                            element.parentNode.insertBefore(spaceNode, nextSibling);
+                        }
                     } else if (!nextSibling) {
-                        // 如果是段落末尾，也添加空格
-                        const spaceNode = document.createTextNode(' ');
-                        element.parentNode.appendChild(spaceNode);
+                        // 如果是段落末尾，不添加空格（避免尾随空格）
+                        // 注释掉原来的代码
+                        // const spaceNode = document.createTextNode(' ');
+                        // element.parentNode.appendChild(spaceNode);
                     }
                 }
                 // 特殊处理strong和em元素内部的所有子元素，确保它们都是内联显示
@@ -972,7 +1020,7 @@ ${cleanHtml}
 ## ✨ 主要特性
 
 - **实时预览**：左侧编辑，右侧实时显示效果
-- **多种主题**：支持微信公众号、掘金、知乎、GitHub等风格
+- **多种主题**：支持微信公众号、AI文章、读书笔记等风格
 - **一键复制**：生成的HTML可直接粘贴到微信公众号编辑器
 - **语法高亮**：支持多种编程语言的代码高亮
 
@@ -982,19 +1030,32 @@ ${cleanHtml}
 
 这是**粗体文本**，这是*斜体文本*，这是~~删除线文本~~。
 
-### 列表
+### 无序列表测试 (支持多种标记)
 
-#### 无序列表
-- 第一项
-- 第二项
-  - 子项目1
-  - 子项目2
-- 第三项
+#### 使用减号 (-) 的列表
+- 第一项：基础功能
+- 第二项：高级功能
+  - 子项目1：实时预览
+  - 子项目2：主题切换
+- 第三项：扩展功能
+
+#### 使用加号 (+) 的列表
++ **知识类/故事类短视频**： 快速批量制作"历史故事"、"冷知识科普"、"名人语录"等视频，发布到抖音、快手、YouTube Shorts上，赚取流量分成和中视频伙伴计划的收益。
++ **数字人定制服务**： 为企业或个人定制专属的数字人形象，用于产品宣传或客服。
++ **AI写作助手**： 帮助用户生成各类文章、报告、创意内容等。
+
+#### 使用星号 (*) 的列表
+* 支持多种列表标记
+* 自动识别和格式化
+* 保持层级结构
+  * 嵌套列表项1
+  * 嵌套列表项2
 
 #### 有序列表
-1. 首先
-2. 然后
-3. 最后
+1. 首先：分析需求
+2. 然后：设计方案
+3. 接着：开发实现
+4. 最后：测试优化
 
 ### 代码示例
 
@@ -1026,6 +1087,7 @@ console.log(greet('微信公众号'));
 | 实时预览 | 边写边看效果 | ✅ |
 | 主题切换 | 多种样式选择 | ✅ |
 | 一键复制 | 快速导出HTML | ✅ |
+| 无序列表 | 支持+、-、*标记 | ✅ |
 
 ---
 
@@ -1071,8 +1133,14 @@ console.log(greet('微信公众号'));
                 color: #856404;
                 font-size: 14px;
             `;
+            // 检查是否是语雀图片
+            const isYuqueImage = /yuque\.com|nlark\.com/i.test(originalSrc);
+            const errorMessage = isYuqueImage ? 
+                '📷 语雀图片加载失败<br><small style="color: #6c757d;">建议：将图片下载后重新上传到图床，或使用公开的图片链接</small>' :
+                '📷 图片加载失败<br><small style="color: #6c757d;">可能是防盗链限制，建议使用公开图床</small>';
+            
             errorDiv.innerHTML = `
-                📷 图片加载失败<br>
+                ${errorMessage}<br>
                 <small style="color: #6c757d;">原链接：${originalSrc}</small><br>
                 <button onclick="window.open('${originalSrc}', '_blank')" style="
                     margin-top: 8px;
@@ -1095,9 +1163,9 @@ console.log(greet('微信公众号'));
         // 尝试不同的代理服务
         const proxyServices = [
             'https://images.weserv.nl/?url=',
-            'https://pic1.xuehuaimg.com/proxy/',
-            'https://cors-anywhere.azm.workers.dev/',
-            'https://api.allorigins.win/raw?url='
+            'https://imageproxy.pimg.tw/resize?url=',
+            'https://wsrv.nl/?url=',
+            'https://cdn.jsdelivr.net/gh/justjavac/proxy@main/'
         ];
         
         const retryIndex = parseInt(img.dataset.retryCount) - 1;

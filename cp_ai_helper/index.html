@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP AI Prompt助手</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 CP AI Prompt助手</h1>
+            <p>基于十个维度优化你的AI提示词</p>
+            <button id="settingsBtn" class="settings-btn">⚙️ API设置</button>
+        </header>
+
+        <!-- 用户输入区域 -->
+        <div class="input-section">
+            <h3>📝 输入你的问题</h3>
+            <textarea id="userInput" placeholder="请输入一个简要的问题，AI将基于十个维度为你生成优化的提示词示例..."></textarea>
+            <button id="generatePrompts" class="primary-btn">生成提示词</button>
+        </div>
+
+        <!-- 主要内容区域：左侧维度，右侧预览 -->
+        <div class="main-content">
+            <!-- 左侧：十个维度 -->
+            <div class="dimensions-panel">
+                <h3>🎯 十个优化维度</h3>
+                <div class="dimensions-list">
+                    <!-- 1. 角色扮演 -->
+                    <div class="dimension-item" data-dimension="persona">
+                        <div class="dimension-header">
+                            <h4>🎭 角色扮演</h4>
+                            <button class="regenerate-btn" data-dimension="persona">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            给AI一个明确的专家角色
+                        </div>
+                        <textarea class="dimension-content" data-dimension="persona" placeholder="AI将在这里生成角色扮演相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 2. 清晰指令 -->
+                    <div class="dimension-item" data-dimension="instruction">
+                        <div class="dimension-header">
+                            <h4>📋 清晰指令</h4>
+                            <button class="regenerate-btn" data-dimension="instruction">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            使用具体明确的动词和指令
+                        </div>
+                        <textarea class="dimension-content" data-dimension="instruction" placeholder="AI将在这里生成清晰指令相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 3. 提供背景 -->
+                    <div class="dimension-item" data-dimension="context">
+                        <div class="dimension-header">
+                            <h4>🌍 提供背景</h4>
+                            <button class="regenerate-btn" data-dimension="context">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            提供足够的背景信息
+                        </div>
+                        <textarea class="dimension-content" data-dimension="context" placeholder="AI将在这里生成背景信息相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 4. 给出示例 -->
+                    <div class="dimension-item" data-dimension="examples">
+                        <div class="dimension-header">
+                            <h4>💡 给出示例</h4>
+                            <button class="regenerate-btn" data-dimension="examples">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            提供具体的示例供AI模仿
+                        </div>
+                        <textarea class="dimension-content" data-dimension="examples" placeholder="AI将在这里生成示例相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 5. 定义输出 -->
+                    <div class="dimension-item" data-dimension="output">
+                        <div class="dimension-header">
+                            <h4>📤 定义输出</h4>
+                            <button class="regenerate-btn" data-dimension="output">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            明确输出格式和结构
+                        </div>
+                        <textarea class="dimension-content" data-dimension="output" placeholder="AI将在这里生成输出定义相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 6. 分步思考 -->
+                    <div class="dimension-item" data-dimension="stepbystep">
+                        <div class="dimension-header">
+                            <h4>🧠 分步思考</h4>
+                            <button class="regenerate-btn" data-dimension="stepbystep">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            引导AI逐步分析问题
+                        </div>
+                        <textarea class="dimension-content" data-dimension="stepbystep" placeholder="AI将在这里生成分步思考相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 7. 指定受众 -->
+                    <div class="dimension-item" data-dimension="audience">
+                        <div class="dimension-header">
+                            <h4>👥 指定受众</h4>
+                            <button class="regenerate-btn" data-dimension="audience">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            明确内容的目标读者
+                        </div>
+                        <textarea class="dimension-content" data-dimension="audience" placeholder="AI将在这里生成受众定义相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 8. 设定约束 -->
+                    <div class="dimension-item" data-dimension="constraints">
+                        <div class="dimension-header">
+                            <h4>🚫 设定约束</h4>
+                            <button class="regenerate-btn" data-dimension="constraints">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            告诉AI不要做什么
+                        </div>
+                        <textarea class="dimension-content" data-dimension="constraints" placeholder="AI将在这里生成约束条件相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 9. 风格与语气 -->
+                    <div class="dimension-item" data-dimension="style">
+                        <div class="dimension-header">
+                            <h4>🎨 风格与语气</h4>
+                            <button class="regenerate-btn" data-dimension="style">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            明确期望的风格和语调
+                        </div>
+                        <textarea class="dimension-content" data-dimension="style" placeholder="AI将在这里生成风格语气相关的提示词..."></textarea>
+                    </div>
+
+                    <!-- 10. 鼓励反思 -->
+                    <div class="dimension-item" data-dimension="reflection">
+                        <div class="dimension-header">
+                            <h4>🤔 鼓励反思</h4>
+                            <button class="regenerate-btn" data-dimension="reflection">🔄</button>
+                        </div>
+                        <div class="dimension-description">
+                            让AI自我批判和改进
+                        </div>
+                        <textarea class="dimension-content" data-dimension="reflection" placeholder="AI将在这里生成反思改进相关的提示词..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：最终提示词 -->
+            <div class="preview-panel">
+                <h3>🎯 最终提示词</h3>
+                <div class="preview-container">
+                    <textarea id="finalPrompt" readonly placeholder="最终生成的提示词将在这里显示..."></textarea>
+                    <div class="preview-actions">
+                        <button id="copyFinalPrompt" class="copy-btn">📋 复制提示词</button>
+                        <button id="testFinalPrompt" class="test-btn">🧪 测试提示词</button>
+                    </div>
+                </div>
+                
+                <!-- 测试结果区域 -->
+                <div class="test-result-section" id="testResultSection" style="display: none;">
+                    <h4>🔍 测试结果</h4>
+                    <textarea id="testResult" readonly placeholder="点击测试按钮后，AI的回复将在这里显示..." style="display: none;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- API设置弹窗 -->
+        <div class="modal-overlay" id="settingsModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ API设置</h3>
+                    <button class="close-btn" id="closeModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label for="apiUrl">API域名:</label>
+                        <input type="text" id="apiUrl" placeholder="https://api.deepseek.com" value="https://api.deepseek.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="modelSelect">选择模型:</label>
+                        <select id="modelSelect">
+                            <option value="deepseek-chat">deepseek-chat (通用模型)</option>
+                            <option value="deepseek-ai/DeepSeek-V3">deepseek-ai/DeepSeek-V3</option>
+                            <option value="deepseek-ai/DeepSeek-V3-0324">deepseek-ai/DeepSeek-V3-0324</option>
+                            <option value="deepseek-ai/DeepSeek-R1">deepseek-ai/DeepSeek-R1</option>
+                            <option value="deepseek-ai/DeepSeek-R1-0528">deepseek-ai/DeepSeek-R1-0528</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="apiKey">API Key:</label>
+                        <input type="password" id="apiKey" placeholder="请输入你的API Key">
+                    </div>
+                    <div class="api-status" id="apiStatus"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="testApiKey" class="test-btn">🧪 测试</button>
+                    <button id="saveApiKey" class="save-btn">💾 保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>AI正在思考中...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
