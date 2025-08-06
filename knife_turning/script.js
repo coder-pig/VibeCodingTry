@@ -19,31 +19,48 @@ const GameConfig = {
     player: {
         startHealth: 100,
         moveSpeed: 200,
-        size: 20
+        size: 45  // 调整角色尺寸到45，让角色显示得更小巧可爱 ✨(｡◕‿◕｡)
     },
     weapons: {
         baseRotationSpeed: 2,
-        baseDamage: 25,
         spawnInterval: 2000,
         maxCount: 1000,
-        radius: 60
-    },
-    enemies: {
-        spawnRate: 800, // 减少基础生成间隔，从1000ms改为800ms
+        radius: 70, // 调整旋转半径，以人物高度(45)的1.56倍为基准，保持合适的比例关系 (｡◕‿◕｡)
+        // 10级武器配置
         types: [
-            { health: 50, damage: 5, speed: 50, exp: 10, size: 15, color: '#ff4444' },
-            { health: 100, damage: 10, speed: 30, exp: 25, size: 20, color: '#ff6666' }
+            { id: 1, name: '拖鞋', damage: 5, range: 1.0, color: '#4169E1', shape: 'slipper' },
+            { id: 2, name: '水果刀', damage: 8, range: 1.2, color: '#C0C0C0', shape: 'fruit_knife' },
+            { id: 3, name: '菜刀', damage: 12, range: 1.5, color: '#A9A9A9', shape: 'cleaver' },
+            { id: 4, name: '匕首', damage: 15, range: 1.3, color: '#2F4F4F', shape: 'dagger' },
+            { id: 5, name: '武士刀', damage: 20, range: 2.0, color: '#8B4513', shape: 'katana' },
+            { id: 6, name: '长剑', damage: 25, range: 2.2, color: '#C0C0C0', shape: 'sword' },
+            { id: 7, name: '倚天剑', damage: 35, range: 2.5, color: '#0000FF', shape: 'legendary_sword', glow: '#0080FF' },
+            { id: 8, name: '屠龙刀', damage: 45, range: 2.8, color: '#8B0000', shape: 'dragon_slayer', glow: '#FF4500' },
+            { id: 9, name: '青龙偃月刀', damage: 55, range: 3.2, color: '#006400', shape: 'crescent_blade', glow: '#32CD32' },
+            { id: 10, name: '方天画戟', damage: 65, range: 3.5, color: '#FFD700', shape: 'halberd', glow: '#FFA500' }
         ]
     },
-    skills: [
-        { id: 'weaponSpawn', name: '刀生成速度', effect: 'spawnRate', value: -500, icon: '🔄' },
-        { id: 'moveSpeed', name: '移动速度增加', effect: 'moveSpeed', value: 50, icon: '🏃' },
-        { id: 'heal', name: '血量增加', effect: 'health', value: 50, icon: '❤️' },
-        { id: 'weaponCount', name: '刀生成数量+1', effect: 'weaponCount', value: 1, icon: '⚔️' }
+    enemies: {
+        spawnRate: 1500, // 增加基础生成间隔从800ms到1500ms，降低生成频率
+        maxCount: 15, // 添加敌人数量上限，当场上敌人超过15个时暂停生成
+        types: [
+            { health: 15, damage: 8, speed: 60, exp: 3, size: 45, color: '#8B4513', name: '丐帮弟子' },
+            { health: 40, damage: 12, speed: 30, exp: 10, size: 45, color: '#228B22', name: '星宿弟子' },
+            { health: 20, damage: 15, speed: 40, exp: 8, size: 45, color: '#4169E1', name: '大理侍卫' },
+            { health: 30, damage: 10, speed: 20, exp: 5, size: 45, color: '#696969', name: '少林弟子' }
+        ]
+    },
+    // 随机成长系统配置
+    growthSkills: [
+        { id: 'weaponUpgrade', name: '刀升级', description: '当前刀具等级提升1级', icon: '⚔️' },
+        { id: 'weaponCount', name: '刀数量+1', description: '每次生成刀的数量+1', icon: '🔢' },
+        { id: 'rotationSpeed', name: '转速提升', description: '刀具旋转速度提升20%', icon: '🌀' },
+        { id: 'moveSpeed', name: '移动速度', description: '角色移动速度提升1点', icon: '💨' },
+        { id: 'healthMax', name: '血量上限', description: '最大生命值增加20点', icon: '❤️' }
     ],
     experience: {
-        baseRequired: 100,
-        multiplier: 1.5
+        baseRequired: 50,
+        multiplier: 1.6
     }
 };
 
@@ -399,6 +416,54 @@ class Player extends GameObject {
         this.invulnerabilityTime = 0; // 无敌剩余时间（毫秒）
         this.invulnerabilityDuration = 1000; // 无敌持续时间（1秒）
         this.isInvulnerable = false; // 是否处于无敌状态
+        
+        // 角色状态管理
+        this.state = 'idle'; // 当前状态：idle（静止）、moving（移动）、hurt（受伤）
+        this.lastState = 'idle'; // 上一个状态，用于状态切换检测
+        
+        // 角色图片资源
+        this.sprites = {
+            idle: null,    // 静止状态图片
+            moving: null,  // 移动状态图片
+            hurt: null     // 受伤状态图片
+        };
+        
+        // 图片加载状态
+        this.spritesLoaded = {
+            idle: false,
+            moving: false,
+            hurt: false
+        };
+        
+        // 加载角色图片
+        this.loadSprites();
+    }
+    
+    /**
+     * 加载角色图片资源
+     */
+    loadSprites() {
+        // 图片URL配置
+        const spriteUrls = {
+            idle: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/player_idle.png',
+            moving: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/player_moving.png',
+            hurt: 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/player_hurt.png'
+        };
+        
+        // 加载每个状态的图片
+        Object.keys(spriteUrls).forEach(state => {
+            const img = new Image();
+            img.onload = () => {
+                this.sprites[state] = img;
+                this.spritesLoaded[state] = true;
+                console.log(`角色${state}状态图片加载成功`);
+            };
+            img.onerror = () => {
+                console.warn(`角色${state}状态图片加载失败，将使用默认渲染`);
+                this.spritesLoaded[state] = false;
+            };
+            img.src = spriteUrls[state];
+        });
     }
     
     /**
@@ -427,6 +492,35 @@ class Player extends GameObject {
         // 边界检测
         this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
         this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
+        
+        // 更新角色状态
+        this.updatePlayerState(input);
+    }
+    
+    /**
+     * 更新角色状态
+     * @param {Object} input - 输入方向
+     */
+    updatePlayerState(input) {
+        // 保存上一个状态
+        this.lastState = this.state;
+        
+        // 判断当前状态
+        if (this.isInvulnerable) {
+            // 如果处于无敌状态（刚受伤），显示受伤状态
+            this.state = 'hurt';
+        } else if (Math.abs(input.x) > 0.1 || Math.abs(input.y) > 0.1) {
+            // 如果有移动输入，显示移动状态
+            this.state = 'moving';
+        } else {
+            // 否则显示静止状态
+            this.state = 'idle';
+        }
+        
+        // 状态切换日志（调试用）
+        if (this.state !== this.lastState) {
+            console.log(`角色状态切换: ${this.lastState} -> ${this.state}`);
+        }
     }
     
     /**
@@ -436,8 +530,59 @@ class Player extends GameObject {
     render(ctx) {
         ctx.save();
         
+        // 检查当前状态的图片是否已加载
+        const currentSprite = this.sprites[this.state];
+        const isCurrentSpriteLoaded = this.spritesLoaded[this.state];
+        
+        if (currentSprite && isCurrentSpriteLoaded) {
+            // 使用图片渲染角色
+            this.renderSprite(ctx, currentSprite);
+        } else {
+            // 图片未加载或加载失败，使用默认圆形渲染
+            this.renderDefault(ctx);
+        }
+        
+        // 移除无敌状态的白色圆圈视觉效果，保留无敌逻辑功能
+        // 原本在此处显示白色圆圈闪烁效果，现在为了更好的视觉体验而移除 (｡◕‿◕｡)
+        // if (this.isInvulnerable) {
+        //     this.renderInvulnerabilityEffect(ctx);
+        // }
+        
+        ctx.restore();
+    }
+    
+    /**
+     * 使用图片渲染角色
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     * @param {HTMLImageElement} sprite - 角色图片
+     */
+    renderSprite(ctx, sprite) {
+        // 计算图片渲染尺寸，按照128x192（2:3）比例渲染 ✨
+        const spriteWidth = this.radius * 2; // 图片宽度等于角色直径
+        const spriteHeight = this.radius * 3; // 图片高度为宽度的1.5倍，保持2:3比例
+        const spriteX = this.x - spriteWidth / 2; // 图片左上角X坐标
+        const spriteY = this.y - spriteHeight / 2; // 图片左上角Y坐标
+        
+        // 使用2:3比例绘制角色图片，保持128x192的原始宽高比 (｡◕‿◕｡)
+        // width:height = 2:3，确保图片不会被拉伸变形
+        ctx.drawImage(sprite, spriteX, spriteY, spriteWidth, spriteHeight);
+    }
+    
+    /**
+     * 使用默认圆形渲染角色（备用方案）
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderDefault(ctx) {
+        // 根据状态调整颜色
+        let bodyColor = '#4444ff'; // 默认蓝色
+        if (this.state === 'hurt') {
+            bodyColor = '#ff4444'; // 受伤时红色
+        } else if (this.state === 'moving') {
+            bodyColor = '#44ff44'; // 移动时绿色
+        }
+        
         // 绘制玩家身体
-        ctx.fillStyle = '#4444ff';
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -453,8 +598,24 @@ class Player extends GameObject {
         ctx.arc(this.x - 5, this.y - 3, 2, 0, Math.PI * 2);
         ctx.arc(this.x + 5, this.y - 3, 2, 0, Math.PI * 2);
         ctx.fill();
+    }
+    
+    /**
+     * 渲染无敌状态效果
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderInvulnerabilityEffect(ctx) {
+        // 创建闪烁效果
+        const flashInterval = 100; // 闪烁间隔（毫秒）
+        const shouldFlash = Math.floor(this.invulnerabilityTime / flashInterval) % 2 === 0;
         
-        ctx.restore();
+        if (shouldFlash) {
+            // 添加半透明白色覆盖层
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
     
     /**
@@ -533,14 +694,26 @@ class Weapon extends GameObject {
      * @param {number} playerX - 玩家X坐标
      * @param {number} playerY - 玩家Y坐标
      * @param {number} angle - 初始角度
+     * @param {number} weaponLevel - 武器等级 (1-10)
      */
-    constructor(playerX, playerY, angle) {
-        super(playerX, playerY, 15, 30);
+    constructor(playerX, playerY, angle, weaponLevel = 1) {
+        super(playerX, playerY, 48, 48); // 调整武器尺寸为48x48像素，保持正方形不变形 ✨
         this.angle = angle;
         this.rotationSpeed = GameConfig.weapons.baseRotationSpeed;
         this.radius = GameConfig.weapons.radius;
-        this.damage = GameConfig.weapons.baseDamage;
+        this.weaponLevel = Math.min(10, Math.max(1, weaponLevel));
+        this.weaponType = GameConfig.weapons.types[this.weaponLevel - 1];
+        // 确保damage和range是有效数字
+        this.damage = Number(this.weaponType?.damage) || 10;
+        this.range = Number(this.weaponType?.range) || 1.0;
+        
+        // 武器图片相关属性 - 用于实现远程图片素材渲染
+        this.sprite = null; // 武器图片对象，存储从远程URL加载的Image实例
+        this.spriteLoaded = false; // 图片加载状态标志，true表示图片已成功加载可以渲染
+        
         this.updatePosition(playerX, playerY);
+        // 加载武器图片
+        this.loadWeaponSprite();
     }
     
     /**
@@ -565,7 +738,84 @@ class Weapon extends GameObject {
     }
     
     /**
+     * 加载武器图片
+     * 根据武器类型加载对应的远程图片资源
+     */
+    loadWeaponSprite() {
+        // 武器类型到文件名的映射
+        const weaponSpriteMap = {
+            'slipper': 'weapon_slipper.png',
+            'fruit_knife': 'weapon_fruit_knife.png',
+            'cleaver': 'weapon_cleaver.png',
+            'dagger': 'weapon_dagger.png',
+            'katana': 'weapon_katana.png',
+            'sword': 'weapon_longsword.png',
+            'legendary_sword': 'weapon_heavenly_sword.png',
+            'dragon_slayer': 'weapon_dragon_slayer.png',
+            'crescent_blade': 'weapon_crescent_blade.png',
+            'halberd': 'weapon_sky_piercer.png'
+        };
+        
+        const spriteFileName = weaponSpriteMap[this.weaponType.shape];
+        if (spriteFileName) {
+            this.sprite = new Image();
+            this.sprite.onload = () => {
+                this.spriteLoaded = true;
+            };
+            this.sprite.onerror = () => {
+                console.warn(`武器图片加载失败: ${spriteFileName}`);
+                this.spriteLoaded = false;
+            };
+            // 使用远程GitHub仓库URL
+             this.sprite.src = `https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/${spriteFileName}`;
+         }
+     }
+     
+     /**
+      * 更新武器属性和外观
+      * 当武器等级提升时调用此方法更新武器的所有属性
+      * @param {number} newWeaponLevel - 新的武器等级
+      */
+     updateWeaponLevel(newWeaponLevel) {
+         this.weaponLevel = Math.min(10, Math.max(1, newWeaponLevel));
+         this.weaponType = GameConfig.weapons.types[this.weaponLevel - 1];
+         // 确保damage和range是有效数字
+         this.damage = Number(this.weaponType?.damage) || 10;
+         this.range = Number(this.weaponType?.range) || 1.0;
+         
+         // 重新加载武器图片以更新外观
+         this.loadWeaponSprite();
+         
+         console.log(`武器升级到等级${this.weaponLevel}: ${this.weaponType.name}, 伤害=${this.damage}`);
+     }
+     
+     /**
+      * 渲染武器图片
+      * 使用加载的图片资源渲染武器
+      * @param {CanvasRenderingContext2D} ctx - 画布上下文
+      */
+     renderWeaponSprite(ctx) {
+         if (this.sprite && this.spriteLoaded) {
+             // 使用48x48像素渲染武器图片，保持正方形不变形 ✨(´∀｀)
+             const spriteWidth = 48;
+             const spriteHeight = 48;
+             
+             // 绘制武器图片，居中对齐
+             ctx.drawImage(
+                 this.sprite,
+                 -spriteWidth / 2,
+                 -spriteHeight / 2,
+                 spriteWidth,
+                 spriteHeight
+             );
+             return true; // 表示成功渲染了图片
+         }
+         return false; // 表示图片未加载，需要使用备用渲染
+     }
+    
+    /**
      * 渲染武器
+     * 优先使用图片渲染，图片未加载时使用形状渲染作为备用
      * @param {CanvasRenderingContext2D} ctx - 画布上下文
      */
     render(ctx) {
@@ -573,11 +823,335 @@ class Weapon extends GameObject {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle + Math.PI / 2);
         
-        // 绘制刀身
-        ctx.fillStyle = '#c0c0c0';
+        // 绘制发光效果（高级武器）
+        if (this.weaponType.glow) {
+            const glowRadius = Math.max(this.width, this.height) * 0.8;
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowRadius);
+            gradient.addColorStop(0, this.weaponType.glow + '80');
+            gradient.addColorStop(1, this.weaponType.glow + '00');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // 优先使用图片渲染，如果图片未加载则使用形状渲染作为备用
+        const spriteRendered = this.renderWeaponSprite(ctx);
+        if (!spriteRendered) {
+            // 图片未加载或加载失败，使用原有的形状渲染
+            this.renderWeaponShape(ctx);
+        }
+        
+        ctx.restore();
+    }
+    
+    /**
+     * 根据武器类型渲染不同形状
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderWeaponShape(ctx) {
+        const shape = this.weaponType.shape;
+        const color = this.weaponType.color;
+        
+        switch (shape) {
+            case 'slipper':
+                this.renderSlipper(ctx, color);
+                break;
+            case 'fruit_knife':
+                this.renderFruitKnife(ctx, color);
+                break;
+            case 'cleaver':
+                this.renderCleaver(ctx, color);
+                break;
+            case 'dagger':
+                this.renderDagger(ctx, color);
+                break;
+            case 'katana':
+                this.renderKatana(ctx, color);
+                break;
+            case 'sword':
+                this.renderSword(ctx, color);
+                break;
+            case 'legendary_sword':
+                this.renderLegendarySword(ctx, color);
+                break;
+            case 'dragon_slayer':
+                this.renderDragonSlayer(ctx, color);
+                break;
+            case 'crescent_blade':
+                this.renderCrescentBlade(ctx, color);
+                break;
+            case 'halberd':
+                this.renderHalberd(ctx, color);
+                break;
+            default:
+                this.renderBasicWeapon(ctx, color);
+        }
+    }
+    
+    /**
+     * 渲染拖鞋
+     */
+    renderSlipper(ctx, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.width * 0.6, this.height * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 拖鞋带子
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.1, this.width * 0.3, 0, Math.PI);
+        ctx.stroke();
+    }
+    
+    /**
+     * 渲染水果刀
+     */
+    renderFruitKnife(ctx, color) {
+        // 刀身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.2, -this.height * 0.4, this.width * 0.4, this.height * 0.6);
+        
+        // 刀尖
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.4);
+        ctx.lineTo(-this.width * 0.2, -this.height * 0.2);
+        ctx.lineTo(this.width * 0.2, -this.height * 0.2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 刀柄
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.15, this.height * 0.2, this.width * 0.3, this.height * 0.3);
+    }
+    
+    /**
+     * 渲染菜刀
+     */
+    renderCleaver(ctx, color) {
+        // 厚重的刀身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.4, -this.height * 0.3, this.width * 0.8, this.height * 0.5);
+        
+        // 刀柄
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(-this.width * 0.2, this.height * 0.2, this.width * 0.4, this.height * 0.3);
+        
+        // 刀刃反光
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(-this.width * 0.3, -this.height * 0.25, this.width * 0.1, this.height * 0.4);
+    }
+    
+    /**
+     * 渲染匕首
+     */
+    renderDagger(ctx, color) {
+        // 细长的刀身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.15, -this.height * 0.4, this.width * 0.3, this.height * 0.6);
+        
+        // 尖锐的刀尖
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.4);
+        ctx.lineTo(-this.width * 0.15, -this.height * 0.25);
+        ctx.lineTo(this.width * 0.15, -this.height * 0.25);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 护手
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.3, this.height * 0.15, this.width * 0.6, this.width * 0.1);
+        
+        // 刀柄
+        ctx.fillRect(-this.width * 0.1, this.height * 0.2, this.width * 0.2, this.height * 0.3);
+    }
+    
+    /**
+     * 渲染武士刀
+     */
+    renderKatana(ctx, color) {
+        // 弯曲的刀身
+        ctx.strokeStyle = color;
+        ctx.lineWidth = this.width * 0.3;
+        ctx.beginPath();
+        ctx.arc(this.width, 0, this.height * 0.8, Math.PI * 0.6, Math.PI * 1.4);
+        ctx.stroke();
+        
+        // 刀柄
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.1, this.height * 0.2, this.width * 0.2, this.height * 0.3);
+        
+        // 护手
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(0, this.height * 0.15, this.width * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    /**
+     * 渲染长剑
+     */
+    renderSword(ctx, color) {
+        // 双刃剑身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.1, -this.height * 0.4, this.width * 0.2, this.height * 0.6);
+        
+        // 剑尖
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.4);
+        ctx.lineTo(-this.width * 0.1, -this.height * 0.3);
+        ctx.lineTo(this.width * 0.1, -this.height * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 护手
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.4, this.height * 0.15, this.width * 0.8, this.width * 0.1);
+        
+        // 剑柄
+        ctx.fillRect(-this.width * 0.08, this.height * 0.2, this.width * 0.16, this.height * 0.25);
+    }
+    
+    /**
+     * 渲染倚天剑
+     */
+    renderLegendarySword(ctx, color) {
+        // 神剑剑身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.12, -this.height * 0.45, this.width * 0.24, this.height * 0.65);
+        
+        // 剑尖
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.45);
+        ctx.lineTo(-this.width * 0.12, -this.height * 0.32);
+        ctx.lineTo(this.width * 0.12, -this.height * 0.32);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 神秘符文
+        ctx.strokeStyle = '#00FFFF';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.2);
+        ctx.lineTo(0, this.height * 0.1);
+        ctx.stroke();
+        
+        // 华丽护手
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(-this.width * 0.5, this.height * 0.15, this.width, this.width * 0.12);
+        
+        // 剑柄
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.1, this.height * 0.2, this.width * 0.2, this.height * 0.25);
+    }
+    
+    /**
+     * 渲染屠龙刀
+     */
+    renderDragonSlayer(ctx, color) {
+        // 霸气刀身
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.25, -this.height * 0.4, this.width * 0.5, this.height * 0.6);
+        
+        // 锯齿刀刃
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const y = -this.height * 0.4 + (i * this.height * 0.1);
+            ctx.moveTo(-this.width * 0.25, y);
+            ctx.lineTo(-this.width * 0.35, y + this.height * 0.05);
+            ctx.lineTo(-this.width * 0.25, y + this.height * 0.1);
+        }
+        ctx.fill();
+        
+        // 龙纹
+        ctx.strokeStyle = '#FF4500';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.1, this.width * 0.15, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 厚重刀柄
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(-this.width * 0.15, this.height * 0.2, this.width * 0.3, this.height * 0.3);
+    }
+    
+    /**
+     * 渲染青龙偃月刀
+     */
+    renderCrescentBlade(ctx, color) {
+        // 月牙形刀刃
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(-this.width * 0.2, 0, this.height * 0.3, -Math.PI * 0.3, Math.PI * 0.3);
+        ctx.arc(this.width * 0.2, 0, this.height * 0.3, Math.PI * 0.7, Math.PI * 1.3);
+        ctx.fill();
+        
+        // 长柄
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.05, 0, this.width * 0.1, this.height * 0.5);
+        
+        // 青龙装饰
+        ctx.strokeStyle = '#32CD32';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.1, this.width * 0.1, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    /**
+     * 渲染方天画戟
+     */
+    renderHalberd(ctx, color) {
+        // 戟头主刃
+        ctx.fillStyle = color;
+        ctx.fillRect(-this.width * 0.15, -this.height * 0.4, this.width * 0.3, this.height * 0.3);
+        
+        // 侧刃
+        ctx.beginPath();
+        ctx.moveTo(-this.width * 0.4, -this.height * 0.2);
+        ctx.lineTo(-this.width * 0.15, -this.height * 0.25);
+        ctx.lineTo(-this.width * 0.15, -this.height * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(this.width * 0.4, -this.height * 0.2);
+        ctx.lineTo(this.width * 0.15, -this.height * 0.25);
+        ctx.lineTo(this.width * 0.15, -this.height * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 戟尖
+        ctx.beginPath();
+        ctx.moveTo(0, -this.height * 0.4);
+        ctx.lineTo(-this.width * 0.15, -this.height * 0.25);
+        ctx.lineTo(this.width * 0.15, -this.height * 0.25);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 长柄
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-this.width * 0.08, -this.height * 0.1, this.width * 0.16, this.height * 0.6);
+        
+        // 金色装饰
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.05, this.width * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    /**
+     * 渲染基础武器（备用渲染方案）
+     */
+    renderBasicWeapon(ctx, color) {
+        // 基础刀身
+        ctx.fillStyle = color;
         ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
         
-        // 绘制刀刃
+        // 刀刃
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         ctx.moveTo(0, -this.height / 2);
@@ -586,11 +1160,9 @@ class Weapon extends GameObject {
         ctx.closePath();
         ctx.fill();
         
-        // 绘制刀柄
+        // 刀柄
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(-this.width / 3, this.height / 2 - 8, this.width * 2 / 3, 8);
-        
-        ctx.restore();
     }
     
     /**
@@ -622,6 +1194,14 @@ class Enemy extends GameObject {
         this.expValue = type.exp;
         this.color = type.color;
         this.radius = type.size / 2;
+        this.enemyType = type.name; // 敌人类型名称，用于加载对应图片
+        
+        // 图片相关属性
+        this.sprite = null; // 敌人图片对象
+        this.spriteLoaded = false; // 图片是否加载完成
+        
+        // 加载敌人图片
+        this.loadEnemySprite();
     }
     
     /**
@@ -644,22 +1224,59 @@ class Enemy extends GameObject {
     }
     
     /**
+     * 加载敌人图片
+     * 根据敌人类型加载对应的远程图片资源
+     */
+    loadEnemySprite() {
+        // 敌人类型到文件名的映射
+        const enemySpriteMap = {
+            '丐帮弟子': 'enemy_beggar.png',
+            '星宿弟子': 'enemy_poison_sect.png',
+            '大理侍卫': 'enemy_dali_guard.png',
+            '少林弟子': 'enemy_shaolin_monk.png'
+        };
+        
+        const fileName = enemySpriteMap[this.enemyType];
+        if (!fileName) {
+            console.warn(`未找到敌人类型 ${this.enemyType} 对应的图片文件`);
+            return;
+        }
+        
+        // 创建图片对象
+        this.sprite = new Image();
+        this.sprite.crossOrigin = 'anonymous'; // 允许跨域加载
+        
+        // 图片加载成功回调
+        this.sprite.onload = () => {
+            this.spriteLoaded = true;
+            console.log(`敌人图片加载成功: ${fileName}`);
+        };
+        
+        // 图片加载失败回调
+        this.sprite.onerror = () => {
+            console.warn(`敌人图片加载失败: ${fileName}，将使用默认圆形渲染`);
+            this.spriteLoaded = false;
+        };
+        
+        // 设置图片源（GitHub raw链接）
+        this.sprite.src = `https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/${fileName}`;
+    }
+    
+    /**
      * 渲染敌人
      * @param {CanvasRenderingContext2D} ctx - 画布上下文
      */
     render(ctx) {
         ctx.save();
         
-        // 绘制敌人身体
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 绘制敌人边框
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        // 检查敌人图片是否已加载
+        if (this.sprite && this.spriteLoaded) {
+            // 使用图片渲染敌人
+            this.renderEnemySprite(ctx);
+        } else {
+            // 使用默认圆形渲染敌人
+            this.renderDefaultEnemy(ctx);
+        }
         
         // 绘制血量条
         if (this.health < this.maxHealth) {
@@ -677,7 +1294,57 @@ class Enemy extends GameObject {
             ctx.fillRect(this.x - barWidth / 2, barY, barWidth * healthPercent, barHeight);
         }
         
+        // 绘制血量数字
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 添加文字描边效果，确保在任何背景下都清晰可见
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeText(this.health.toString(), this.x, this.y - this.radius - 18);
+        ctx.fillText(this.health.toString(), this.x, this.y - this.radius - 18);
+        
         ctx.restore();
+    }
+    
+    /**
+     * 使用图片渲染敌人
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderEnemySprite(ctx) {
+        // 计算图片渲染尺寸，按照128x231（约1:1.8）比例渲染，避免变形 ✨
+        const spriteWidth = this.radius * 2; // 图片宽度等于敌人直径
+        const spriteHeight = this.radius * 3.6; // 图片高度为宽度的1.8倍，保持128:231比例
+        const spriteX = this.x - spriteWidth / 2; // 图片左上角X坐标
+        const spriteY = this.y - spriteHeight / 2; // 图片左上角Y坐标
+        
+        // 使用128:231比例绘制敌人图片，保持原始宽高比不变形 (｡◕‿◕｡)
+        ctx.drawImage(
+            this.sprite,
+            spriteX,
+            spriteY,
+            spriteWidth,
+            spriteHeight
+        );
+    }
+    
+    /**
+     * 使用默认圆形渲染敌人
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderDefaultEnemy(ctx) {
+        // 绘制敌人身体
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 绘制敌人边框
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     }
     
     /**
@@ -685,7 +1352,11 @@ class Enemy extends GameObject {
      * @param {number} damage - 伤害值
      */
     takeDamage(damage) {
-        this.health = Math.max(0, this.health - damage);
+        // 确保damage是有效数字
+        const validDamage = Number(damage) || 0;
+        console.log(`敌人受到伤害: 原血量=${this.health}, 伤害=${validDamage}`);
+        this.health = Math.max(0, this.health - validDamage);
+        console.log(`敌人受伤后血量=${this.health}`);
     }
     
     /**
@@ -727,6 +1398,34 @@ class Boss extends Enemy {
         this.chargeDirection = { x: 0, y: 0 };
         this.chargeDuration = 0;
         this.maxChargeDuration = 1000; // 1秒冲刺时间
+        
+        // Boss特有的图片加载
+        this.loadBossSprite();
+    }
+    
+    /**
+     * 加载Boss图片
+     * 加载扫地僧Boss的专用图片
+     */
+    loadBossSprite() {
+        // 创建图片对象
+        this.sprite = new Image();
+        this.sprite.crossOrigin = 'anonymous'; // 允许跨域加载
+        
+        // 图片加载成功回调
+        this.sprite.onload = () => {
+            this.spriteLoaded = true;
+            console.log('Boss图片加载成功: boss_sweeping_monk.png');
+        };
+        
+        // 图片加载失败回调
+        this.sprite.onerror = () => {
+            console.warn('Boss图片加载失败: boss_sweeping_monk.png，将使用默认圆形渲染');
+            this.spriteLoaded = false;
+        };
+        
+        // 设置图片源（GitHub raw链接）
+        this.sprite.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/boss_sweeping_monk.png';
     }
     
     /**
@@ -809,6 +1508,76 @@ class Boss extends Enemy {
             ctx.fill();
         }
         
+        // 检查Boss图片是否已加载
+        if (this.sprite && this.spriteLoaded) {
+            // 使用图片渲染Boss
+            this.renderBossSprite(ctx);
+        } else {
+            // 使用默认圆形渲染Boss
+            this.renderDefaultBoss(ctx);
+        }
+        
+        // Boss血量条（更大更显眼）
+        const barWidth = this.width * 1.5;
+        const barHeight = 8;
+        const barY = this.y - this.radius - 15;
+        
+        // 背景
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(this.x - barWidth / 2, barY, barWidth, barHeight);
+        
+        // 血量
+        ctx.fillStyle = '#ff0000';
+        const healthPercent = this.health / this.maxHealth;
+        ctx.fillRect(this.x - barWidth / 2, barY, barWidth * healthPercent, barHeight);
+        
+        // Boss血量数字（更大更显眼）
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 添加文字描边效果，确保在任何背景下都清晰可见
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`${this.health}/${this.maxHealth}`, this.x, this.y - this.radius - 28);
+        ctx.fillText(`${this.health}/${this.maxHealth}`, this.x, this.y - this.radius - 28);
+        
+        // Boss标识
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('BOSS', this.x, this.y + this.radius + 20);
+        
+        ctx.restore();
+    }
+    
+    /**
+     * 使用图片渲染Boss
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderBossSprite(ctx) {
+        // 计算图片渲染尺寸，Boss图片要更大更威武，按照128x231比例渲染 ✨
+        const spriteWidth = this.radius * 2.2; // Boss图片宽度比普通敌人稍大
+        const spriteHeight = this.radius * 4; // Boss图片高度为宽度的1.8倍，保持128:231比例
+        const spriteX = this.x - spriteWidth / 2; // 图片左上角X坐标
+        const spriteY = this.y - spriteHeight / 2; // 图片左上角Y坐标
+        
+        // 使用128:231比例绘制Boss图片，保持原始宽高比不变形 (｡◕‿◕｡)
+        ctx.drawImage(
+            this.sprite,
+            spriteX,
+            spriteY,
+            spriteWidth,
+            spriteHeight
+        );
+    }
+    
+    /**
+     * 使用默认圆形渲染Boss
+     * @param {CanvasRenderingContext2D} ctx - 画布上下文
+     */
+    renderDefaultBoss(ctx) {
         // 绘制Boss身体
         ctx.fillStyle = this.color;
         ctx.beginPath();
@@ -826,28 +1595,6 @@ class Boss extends Enemy {
         ctx.arc(this.x - 8, this.y - 8, 4, 0, Math.PI * 2);
         ctx.arc(this.x + 8, this.y - 8, 4, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Boss血量条（更大更显眼）
-        const barWidth = this.width * 1.5;
-        const barHeight = 8;
-        const barY = this.y - this.radius - 15;
-        
-        // 背景
-        ctx.fillStyle = '#333333';
-        ctx.fillRect(this.x - barWidth / 2, barY, barWidth, barHeight);
-        
-        // 血量
-        ctx.fillStyle = '#ff0000';
-        const healthPercent = this.health / this.maxHealth;
-        ctx.fillRect(this.x - barWidth / 2, barY, barWidth * healthPercent, barHeight);
-        
-        // Boss标识
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('BOSS', this.x, this.y + this.radius + 20);
-        
-        ctx.restore();
     }
 }
 
@@ -1169,6 +1916,15 @@ class GameEngine {
         this.inputManager = new InputManager();
         this.isMobile = DeviceDetector.isMobile();
         
+        // 音频管理
+        this.audioManager = {
+            bgm: null,
+            attackSound: null,
+            volume: 0.5,
+            muted: false
+        };
+        this.initAudio();
+        
         // 游戏状态
         this.gameState = 'start'; // 'start', 'playing', 'paused', 'levelUp', 'gameOver', 'victory'
         this.lastTime = 0;
@@ -1194,12 +1950,20 @@ class GameEngine {
         this.bossSpawned = false; // Boss是否已生成
         this.boss = null; // Boss对象
         
+        // 武器等级系统
+        this.currentWeaponLevel = 1; // 当前武器等级
+        
         // 临时增益效果
         this.speedBoostEndTime = 0;
         this.damageBoostEndTime = 0;
         this.magnetEndTime = 0; // 吸铁石效果结束时间
         this.originalMoveSpeed = GameConfig.player.moveSpeed;
         this.originalWeaponDamage = GameConfig.weapons.baseDamage;
+        
+        // 背景图片相关
+        this.backgroundImage = null; // 背景图片对象
+        this.backgroundImageLoaded = false; // 背景图片是否加载完成
+        this.loadBackgroundImage(); // 加载背景图片
         
         this.setupCanvas();
         this.setupUI();
@@ -1212,9 +1976,23 @@ class GameEngine {
     setupCanvas() {
         CanvasAdapter.resizeCanvas(this.canvas, this.isMobile);
         
+        // 设置图像渲染质量，提高图片清晰度 ✨
+        // 禁用图像平滑，获得像素完美的清晰效果，避免256x256图片被模糊化 (｡◕‿◕｡)
+        this.ctx.imageSmoothingEnabled = false;
+        
+        // 设置图像平滑质量为高质量（作为备用选项）
+        if (this.ctx.imageSmoothingQuality) {
+            this.ctx.imageSmoothingQuality = 'high';
+        }
+        
         // 监听窗口大小变化
         window.addEventListener('resize', () => {
             CanvasAdapter.resizeCanvas(this.canvas, this.isMobile);
+            // 重新设置图像渲染质量，确保窗口调整后依然保持清晰
+            this.ctx.imageSmoothingEnabled = false;
+            if (this.ctx.imageSmoothingQuality) {
+                this.ctx.imageSmoothingQuality = 'high';
+            }
         });
     }
     
@@ -1262,6 +2040,9 @@ class GameEngine {
     startGame() {
         document.getElementById('startScreen').classList.add('hidden');
         this.gameState = 'playing';
+        
+        // 播放背景音乐
+        this.playBackgroundMusic();
         
         // 初始化游戏对象
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
@@ -1395,7 +2176,7 @@ class GameEngine {
             // 根据weaponSpawnCount生成多把武器
             for (let i = 0; i < this.weaponSpawnCount && this.weapons.length < GameConfig.weapons.maxCount; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const weapon = new Weapon(this.player.x, this.player.y, angle);
+                const weapon = new Weapon(this.player.x, this.player.y, angle, this.currentWeaponLevel);
                 this.weapons.push(weapon);
             }
             this.lastWeaponSpawn = 0;
@@ -1413,13 +2194,32 @@ class GameEngine {
         // 等级越高，生成间隔越短，同时生成的敌人数量越多
         const level = this.player.level;
         
-        // 更激进的速度倍数：每级减少15%，最小保持5%（20倍速度）
-        const levelSpeedMultiplier = Math.max(0.05, 1 - (level - 1) * 0.15);
+        // 前期友好的生成间隔调整：1-3级减少5%，4级以上每级减少8%，最小保持20%
+        let levelSpeedMultiplier;
+        if (level <= 3) {
+            levelSpeedMultiplier = Math.max(0.8, 1 - (level - 1) * 0.05); // 前期减少幅度更小
+        } else {
+            levelSpeedMultiplier = Math.max(0.2, 0.85 - (level - 4) * 0.08); // 从4级开始正常递减
+        }
         const dynamicSpawnRate = GameConfig.enemies.spawnRate * levelSpeedMultiplier;
         
-        // 根据等级决定同时生成的敌人数量
-        // 1-3级：1个，4-6级：2个，7-9级：3个，10级以上：4个
-        const enemyCount = Math.min(4, Math.floor((level - 1) / 3) + 1);
+        // 检查敌人数量上限，如果超过上限则暂停生成
+        if (this.enemies.length >= GameConfig.enemies.maxCount) {
+            return;
+        }
+        
+        // 根据等级决定同时生成的敌人数量（优化前期体验）
+        // 1-2级：1个，3-4级：1个，5-7级：2个，8级以上：3个
+        let enemyCount;
+        if (level <= 2) {
+            enemyCount = 1;
+        } else if (level <= 4) {
+            enemyCount = 1;
+        } else if (level <= 7) {
+            enemyCount = 2;
+        } else {
+            enemyCount = 3;
+        }
         
         if (this.lastEnemySpawn >= dynamicSpawnRate) {
             // 生成多个敌人
@@ -1608,16 +2408,26 @@ class GameEngine {
         // 武器与敌人的碰撞
         for (let i = this.weapons.length - 1; i >= 0; i--) {
             const weapon = this.weapons[i];
+            let weaponHit = false;
             
             for (let j = this.enemies.length - 1; j >= 0; j--) {
                 const enemy = this.enemies[j];
                 
                 if (CollisionDetector.circleCollision(weapon, enemy)) {
-                    // 敌人受到伤害
-                    enemy.takeDamage(weapon.damage);
+                    // 确保武器伤害值有效
+                    const damage = Number(weapon.damage) || 10;
+                    console.log(`武器攻击敌人: 武器等级=${weapon.weaponLevel}, 伤害=${damage}, 敌人当前血量=${enemy.health}`);
                     
-                    // 移除武器
-                    this.weapons.splice(i, 1);
+                    // 播放攻击音效
+                    this.playAttackSound();
+                    
+                    // 敌人受到伤害
+                    enemy.takeDamage(damage);
+                    
+                    console.log(`攻击后敌人血量=${enemy.health}, 是否死亡=${enemy.isDead()}`);
+                    
+                    // 标记武器命中
+                    weaponHit = true;
                     
                     // 如果敌人死亡，生成经验球
                     if (enemy.isDead()) {
@@ -1633,10 +2443,17 @@ class GameEngine {
                         
                         this.enemies.splice(j, 1);
                         this.killCount++;
+                        console.log(`敌人死亡，移除敌人`);
                     }
                     
                     break;
                 }
+            }
+            
+            // 如果武器命中了敌人，移除武器
+            if (weaponHit) {
+                this.weapons.splice(i, 1);
+                console.log(`武器命中敌人，移除武器`);
             }
         }
         
@@ -1714,7 +2531,7 @@ class GameEngine {
                 // 添加武器
                 for (let i = 0; i < reward.count && this.weapons.length < GameConfig.weapons.maxCount; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const weapon = new Weapon(this.player.x, this.player.y, angle);
+                    const weapon = new Weapon(this.player.x, this.player.y, angle, this.currentWeaponLevel);
                     this.weapons.push(weapon);
                 }
                 break;
@@ -1797,8 +2614,8 @@ class GameEngine {
     showLevelUpModal() {
         this.gameState = 'levelUp';
         
-        // 随机选择3个技能
-        const availableSkills = [...GameConfig.skills];
+        // 从5种成长技能中随机选择3个
+        const availableSkills = [...GameConfig.growthSkills];
         const selectedSkills = [];
         
         for (let i = 0; i < 3 && availableSkills.length > 0; i++) {
@@ -1806,13 +2623,13 @@ class GameEngine {
             selectedSkills.push(availableSkills.splice(index, 1)[0]);
         }
         
-        // 更新技能卡片，隐藏第四个卡片
+        // 更新技能卡片
         const skillCards = document.querySelectorAll('.skill-card');
         selectedSkills.forEach((skill, index) => {
             if (skillCards[index]) {
                 skillCards[index].querySelector('.skill-icon').textContent = skill.icon;
                 skillCards[index].querySelector('.skill-name').textContent = skill.name;
-                skillCards[index].querySelector('.skill-desc').textContent = this.getSkillDescription(skill);
+                skillCards[index].querySelector('.skill-desc').textContent = skill.description;
                 skillCards[index].dataset.skillId = skill.id;
                 skillCards[index].style.display = 'block';
             }
@@ -1826,25 +2643,7 @@ class GameEngine {
         document.getElementById('skillModal').classList.remove('hidden');
     }
     
-    /**
-     * 获取技能描述
-     * @param {Object} skill - 技能对象
-     * @returns {string} 技能描述
-     */
-    getSkillDescription(skill) {
-        switch (skill.id) {
-            case 'weaponSpawn':
-                return `武器生成间隔减少 ${Math.abs(skill.value)}ms`;
-            case 'heal':
-                return `立即恢复 ${skill.value} 点血量`;
-            case 'moveSpeed':
-                return `移动速度增加 ${skill.value}`;
-            case 'weaponCount':
-                return `每次生成武器数量增加 ${skill.value}`;
-            default:
-                return skill.name;
-        }
-    }
+
     
     /**
      * 选择技能
@@ -1853,7 +2652,7 @@ class GameEngine {
     selectSkill(index) {
         const skillCard = document.querySelectorAll('.skill-card')[index];
         const skillId = skillCard.dataset.skillId;
-        const skill = GameConfig.skills.find(s => s.id === skillId);
+        const skill = GameConfig.growthSkills.find(s => s.id === skillId);
         
         if (skill) {
             this.applySkill(skill);
@@ -1868,18 +2667,39 @@ class GameEngine {
      * @param {Object} skill - 技能对象
      */
     applySkill(skill) {
-        switch (skill.effect) {
-            case 'spawnRate':
-                this.weaponSpawnRate = Math.max(500, this.weaponSpawnRate + skill.value);
-                break;
-            case 'health':
-                this.player.heal(skill.value);
-                break;
-            case 'moveSpeed':
-                this.player.moveSpeed += skill.value;
+        switch (skill.id) {
+            case 'weaponUpgrade':
+                // 刀升级：提升武器等级
+                if (this.currentWeaponLevel < 10) {
+                    this.currentWeaponLevel++;
+                    console.log(`全局武器等级提升到: ${this.currentWeaponLevel}`);
+                    
+                    // 使用新的updateWeaponLevel方法更新所有现有武器
+                    this.weapons.forEach(weapon => {
+                        weapon.updateWeaponLevel(this.currentWeaponLevel);
+                    });
+                    
+                    // 显示升级提示信息
+                    const weaponType = GameConfig.weapons.types[this.currentWeaponLevel - 1];
+                    console.log(`所有武器已升级为: ${weaponType.name}`);
+                }
                 break;
             case 'weaponCount':
-                this.weaponSpawnCount += skill.value;
+                // 刀数量：增加武器数量
+                this.weaponSpawnCount += 1;
+                break;
+            case 'rotationSpeed':
+                // 转速提升：增加武器旋转速度
+                this.weaponRotationSpeed += 0.02;
+                break;
+            case 'moveSpeed':
+                // 移动速度：增加玩家移动速度
+                this.player.speed += 0.5;
+                break;
+            case 'healthMax':
+                // 血量上限：增加最大生命值并恢复生命
+                this.player.maxHealth += 20;
+                this.player.health = Math.min(this.player.health + 20, this.player.maxHealth);
                 break;
         }
     }
@@ -1889,6 +2709,9 @@ class GameEngine {
      */
     gameOver() {
         this.gameState = 'gameOver';
+        
+        // 停止背景音乐
+        this.stopBackgroundMusic();
         
         // 更新游戏结束统计
         document.getElementById('gameOverTitle').textContent = '游戏失败';
@@ -1904,6 +2727,9 @@ class GameEngine {
      */
     victory() {
         this.gameState = 'victory';
+        
+        // 停止背景音乐
+        this.stopBackgroundMusic();
         
         // 更新游戏胜利统计
         document.getElementById('gameOverTitle').textContent = '游戏胜利！';
@@ -1968,9 +2794,168 @@ class GameEngine {
     }
     
     /**
+     * 初始化音频系统
+     */
+    initAudio() {
+        try {
+            // 初始化背景音乐
+            this.audioManager.bgm = new Audio();
+            this.audioManager.bgm.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/bgm.mp3';
+            this.audioManager.bgm.loop = true;
+            this.audioManager.bgm.volume = this.audioManager.volume * 0.3; // 背景音乐音量较低
+            this.audioManager.bgm.preload = 'auto';
+            
+            // 初始化攻击音效
+            this.audioManager.attackSound = new Audio();
+            this.audioManager.attackSound.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/sword.mp3';
+            this.audioManager.attackSound.volume = this.audioManager.volume;
+            this.audioManager.attackSound.preload = 'auto';
+            
+            console.log('音频系统初始化成功');
+        } catch (error) {
+            console.warn('音频系统初始化失败:', error);
+        }
+    }
+    
+    /**
+     * 播放背景音乐
+     */
+    playBackgroundMusic() {
+        if (this.audioManager.bgm && !this.audioManager.muted) {
+            try {
+                this.audioManager.bgm.currentTime = 0;
+                const playPromise = this.audioManager.bgm.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn('背景音乐播放失败:', error);
+                    });
+                }
+            } catch (error) {
+                console.warn('背景音乐播放失败:', error);
+            }
+        }
+    }
+    
+    /**
+     * 播放攻击音效
+     */
+    playAttackSound() {
+        if (this.audioManager.attackSound && !this.audioManager.muted) {
+            try {
+                // 克隆音频对象以支持快速连续播放
+                const sound = this.audioManager.attackSound.cloneNode();
+                sound.volume = this.audioManager.volume;
+                const playPromise = sound.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn('攻击音效播放失败:', error);
+                    });
+                }
+            } catch (error) {
+                console.warn('攻击音效播放失败:', error);
+            }
+        }
+    }
+    
+    /**
+     * 停止背景音乐
+     */
+    stopBackgroundMusic() {
+        if (this.audioManager.bgm) {
+            this.audioManager.bgm.pause();
+            this.audioManager.bgm.currentTime = 0;
+        }
+    }
+    
+    /**
+     * 切换音频静音状态
+     */
+    toggleMute() {
+        this.audioManager.muted = !this.audioManager.muted;
+        if (this.audioManager.muted) {
+            this.stopBackgroundMusic();
+        } else if (this.gameState === 'playing') {
+            this.playBackgroundMusic();
+        }
+    }
+    
+    /**
+     * 加载背景图片
+     */
+    loadBackgroundImage() {
+        this.backgroundImage = new Image();
+        this.backgroundImage.crossOrigin = 'anonymous'; // 允许跨域加载
+        
+        // 图片加载成功回调
+        this.backgroundImage.onload = () => {
+            this.backgroundImageLoaded = true;
+            console.log('背景图片加载成功');
+        };
+        
+        // 图片加载失败回调
+        this.backgroundImage.onerror = () => {
+            console.warn('背景图片加载失败，将使用默认草地纹理');
+            this.backgroundImageLoaded = false;
+        };
+        
+        // 设置图片源（GitHub raw链接）
+        this.backgroundImage.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/bg.png';
+    }
+    
+    /**
      * 渲染背景
      */
     renderBackground() {
+        if (this.backgroundImageLoaded && this.backgroundImage) {
+            // 使用背景图片
+            this.renderBackgroundImage();
+        } else {
+            // 使用默认草地纹理
+            this.renderDefaultBackground();
+        }
+    }
+    
+    /**
+     * 渲染背景图片
+     */
+    renderBackgroundImage() {
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        const imageWidth = this.backgroundImage.width;
+        const imageHeight = this.backgroundImage.height;
+        
+        // 计算缩放比例，保持9:16宽高比并填满画布
+        const canvasRatio = canvasWidth / canvasHeight;
+        const imageRatio = imageWidth / imageHeight;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (canvasRatio > imageRatio) {
+            // 画布比图片更宽，以宽度为准缩放
+            drawWidth = canvasWidth;
+            drawHeight = canvasWidth / imageRatio;
+            offsetX = 0;
+            offsetY = (canvasHeight - drawHeight) / 2;
+        } else {
+            // 画布比图片更高，以高度为准缩放
+            drawHeight = canvasHeight;
+            drawWidth = canvasHeight * imageRatio;
+            offsetX = (canvasWidth - drawWidth) / 2;
+            offsetY = 0;
+        }
+        
+        // 绘制背景图片
+        this.ctx.drawImage(
+            this.backgroundImage,
+            offsetX, offsetY,
+            drawWidth, drawHeight
+        );
+    }
+    
+    /**
+     * 渲染默认草地纹理背景
+     */
+    renderDefaultBackground() {
         // 绘制简单的草地纹理
         this.ctx.fillStyle = '#4a7c23';
         for (let x = 0; x < this.canvas.width; x += 40) {

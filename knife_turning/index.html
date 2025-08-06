@@ -50,25 +50,20 @@
             <div class="modal-content">
                 <h2>选择技能升级</h2>
                 <div class="skill-options">
-                    <div class="skill-card" data-skill="0">
-                        <div class="skill-icon">🔄</div>
-                        <div class="skill-name">刀生成速度</div>
-                        <div class="skill-desc">更快生成新武器</div>
-                    </div>
-                    <div class="skill-card" data-skill="1">
-                        <div class="skill-icon">🏃</div>
-                        <div class="skill-name">移动速度增加</div>
-                        <div class="skill-desc">提升移动速度</div>
-                    </div>
-                    <div class="skill-card" data-skill="2">
-                        <div class="skill-icon">❤️</div>
-                        <div class="skill-name">血量增加</div>
-                        <div class="skill-desc">立即恢复血量</div>
-                    </div>
-                    <div class="skill-card" data-skill="3">
+                    <div class="skill-card" onclick="game.selectSkill(0)">
                         <div class="skill-icon">⚔️</div>
-                        <div class="skill-name">刀生成数量+1</div>
-                        <div class="skill-desc">每次生成更多武器</div>
+                        <div class="skill-name">技能名称</div>
+                        <div class="skill-desc">技能描述</div>
+                    </div>
+                    <div class="skill-card" onclick="game.selectSkill(1)">
+                        <div class="skill-icon">⚔️</div>
+                        <div class="skill-name">技能名称</div>
+                        <div class="skill-desc">技能描述</div>
+                    </div>
+                    <div class="skill-card" onclick="game.selectSkill(2)">
+                        <div class="skill-icon">⚔️</div>
+                        <div class="skill-name">技能名称</div>
+                        <div class="skill-desc">技能描述</div>
                     </div>
                 </div>
             </div>

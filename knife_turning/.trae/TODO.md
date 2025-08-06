@@ -1,6 +1,6 @@
 # TODO:
 
-- [x] 1: 检查DeviceDetector.isMobile()的设备检测逻辑 (priority: High)
-- [x] 2: 修改CSS样式，确保虚拟摇杆在桌面端也能显示用于测试 (priority: High)
-- [x] 3: 验证虚拟摇杆的事件监听和输入传递逻辑 (priority: Medium)
-- [x] 4: 测试修复后的摇杆功能 (priority: Medium)
+- [x] 1: 创建音频管理器类(AudioManager)来统一管理音效 (priority: High)
+- [x] 2: 在游戏初始化时集成音频系统并加载背景音乐 (priority: High)
+- [x] 3: 在武器攻击敌人的碰撞检测中添加攻击音效播放 (priority: High)
+- [x] 4: 测试音效功能是否正常工作 (priority: Medium)
