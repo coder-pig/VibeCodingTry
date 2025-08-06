@@ -701,15 +701,40 @@ class Weapon extends GameObject {
         this.angle = angle;
         this.rotationSpeed = GameConfig.weapons.baseRotationSpeed;
         this.radius = GameConfig.weapons.radius;
+        
+        // 确保武器等级在有效范围内并添加调试信息
+        const originalLevel = weaponLevel;
         this.weaponLevel = Math.min(10, Math.max(1, weaponLevel));
+        
+        // 验证武器配置数组索引
+        const weaponIndex = this.weaponLevel - 1;
+        if (weaponIndex < 0 || weaponIndex >= GameConfig.weapons.types.length) {
+            console.error(`🚨 武器构造失败: 等级${this.weaponLevel}对应的索引${weaponIndex}超出范围`);
+            this.weaponLevel = 1; // 回退到默认等级
+        }
+        
         this.weaponType = GameConfig.weapons.types[this.weaponLevel - 1];
+        
+        // 验证武器类型是否存在
+        if (!this.weaponType) {
+            console.error(`🚨 武器类型不存在，等级: ${this.weaponLevel}, 索引: ${this.weaponLevel - 1}`);
+            this.weaponType = GameConfig.weapons.types[0]; // 回退到第一个武器
+            this.weaponLevel = 1;
+        }
+        
         // 确保damage和range是有效数字
-        this.damage = Number(this.weaponType?.damage) || 10;
-        this.range = Number(this.weaponType?.range) || 1.0;
+        this.damage = Number(this.weaponType.damage) || 10;
+        this.range = Number(this.weaponType.range) || 1.0;
         
         // 武器图片相关属性 - 用于实现远程图片素材渲染
         this.sprite = null; // 武器图片对象，存储从远程URL加载的Image实例
         this.spriteLoaded = false; // 图片加载状态标志，true表示图片已成功加载可以渲染
+        
+        // 调试信息
+        if (originalLevel !== this.weaponLevel) {
+            console.log(`⚠️ 武器等级已调整: ${originalLevel} → ${this.weaponLevel}`);
+        }
+        console.log(`🗡️ 创建武器: ${this.weaponType.name} (等级${this.weaponLevel}, 伤害${this.damage})`);
         
         this.updatePosition(playerX, playerY);
         // 加载武器图片
@@ -777,16 +802,39 @@ class Weapon extends GameObject {
       * @param {number} newWeaponLevel - 新的武器等级
       */
      updateWeaponLevel(newWeaponLevel) {
+         const oldLevel = this.weaponLevel;
+         const oldWeaponName = this.weaponType ? this.weaponType.name : '未知';
+         
+         // 确保武器等级在有效范围内 (1-10)
          this.weaponLevel = Math.min(10, Math.max(1, newWeaponLevel));
-         this.weaponType = GameConfig.weapons.types[this.weaponLevel - 1];
+         
+         // 验证数组索引的有效性
+         const weaponIndex = this.weaponLevel - 1;
+         if (weaponIndex < 0 || weaponIndex >= GameConfig.weapons.types.length) {
+             console.error(`武器等级索引超出范围: ${weaponIndex}, 武器等级: ${this.weaponLevel}`);
+             return;
+         }
+         
+         this.weaponType = GameConfig.weapons.types[weaponIndex];
+         
+         // 验证武器类型是否存在
+         if (!this.weaponType) {
+             console.error(`武器类型不存在，索引: ${weaponIndex}, 等级: ${this.weaponLevel}`);
+             return;
+         }
+         
          // 确保damage和range是有效数字
-         this.damage = Number(this.weaponType?.damage) || 10;
-         this.range = Number(this.weaponType?.range) || 1.0;
+         this.damage = Number(this.weaponType.damage) || 10;
+         this.range = Number(this.weaponType.range) || 1.0;
          
          // 重新加载武器图片以更新外观
          this.loadWeaponSprite();
          
-         console.log(`武器升级到等级${this.weaponLevel}: ${this.weaponType.name}, 伤害=${this.damage}`);
+         // 详细的升级日志
+         console.log(`🔧 武器升级详情:`);
+         console.log(`   从 ${oldLevel}级(${oldWeaponName}) → ${this.weaponLevel}级(${this.weaponType.name})`);
+         console.log(`   伤害: ${this.damage}, 范围: ${this.range}`);
+         console.log(`   数组索引: ${weaponIndex}`);
      }
      
      /**
@@ -815,10 +863,15 @@ class Weapon extends GameObject {
     
     /**
      * 渲染武器
-     * 优先使用图片渲染，图片未加载时使用形状渲染作为备用
+     * 只有在图片成功加载后才显示武器，避免显示备用形状
      * @param {CanvasRenderingContext2D} ctx - 画布上下文
      */
     render(ctx) {
+        // 只有当图片成功加载后才渲染武器
+        if (!this.sprite || !this.spriteLoaded) {
+            return; // 图片未加载时不显示任何内容
+        }
+        
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle + Math.PI / 2);
@@ -836,12 +889,8 @@ class Weapon extends GameObject {
             ctx.fill();
         }
         
-        // 优先使用图片渲染，如果图片未加载则使用形状渲染作为备用
-        const spriteRendered = this.renderWeaponSprite(ctx);
-        if (!spriteRendered) {
-            // 图片未加载或加载失败，使用原有的形状渲染
-            this.renderWeaponShape(ctx);
-        }
+        // 只使用图片渲染，不再使用备用形状
+        this.renderWeaponSprite(ctx);
         
         ctx.restore();
     }
@@ -1921,9 +1970,17 @@ class GameEngine {
             bgm: null,
             attackSound: null,
             volume: 0.5,
-            muted: false
+            muted: false,
+            // 预加载状态管理
+            isLoading: false,
+            loadingProgress: 0,
+            totalResources: 2, // 背景音乐 + 攻击音效
+            loadedResources: 0,
+            loadingPromises: []
         };
-        this.initAudio();
+        
+        // 开始预加载音频资源
+        this.preloadAudioResources();
         
         // 游戏状态
         this.gameState = 'start'; // 'start', 'playing', 'paused', 'levelUp', 'gameOver', 'victory'
@@ -2016,6 +2073,147 @@ class GameEngine {
                 this.selectSkill(index);
             });
         });
+        
+        // 初始化时禁用开始按钮
+        this.updateStartButtonState();
+    }
+    
+    /**
+     * 更新开始按钮状态
+     */
+    updateStartButtonState() {
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            if (this.audioManager.isLoading) {
+                startBtn.disabled = true;
+                startBtn.textContent = '资源加载中...';
+                startBtn.style.opacity = '0.6';
+                startBtn.style.cursor = 'not-allowed';
+            } else {
+                startBtn.disabled = false;
+                startBtn.textContent = '开始游戏';
+                startBtn.style.opacity = '1';
+                startBtn.style.cursor = 'pointer';
+            }
+        }
+    }
+    
+    /**
+     * 显示加载界面
+     */
+    showLoadingScreen() {
+        // 创建加载界面元素（如果不存在）
+        let loadingScreen = document.getElementById('loadingScreen');
+        if (!loadingScreen) {
+            loadingScreen = document.createElement('div');
+            loadingScreen.id = 'loadingScreen';
+            loadingScreen.className = 'loading-screen';
+            loadingScreen.innerHTML = `
+                <div class="loading-content">
+                    <h2>🎮 游戏资源加载中...</h2>
+                    <div class="loading-bar">
+                        <div class="loading-progress" id="loadingProgress"></div>
+                    </div>
+                    <p class="loading-text" id="loadingText">正在加载音频资源... 0%</p>
+                </div>
+            `;
+            document.body.appendChild(loadingScreen);
+            
+            // 添加加载界面样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .loading-screen {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    font-family: Arial, sans-serif;
+                }
+                .loading-content {
+                    text-align: center;
+                    color: white;
+                    max-width: 400px;
+                    padding: 20px;
+                }
+                .loading-content h2 {
+                    margin-bottom: 30px;
+                    font-size: 24px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                }
+                .loading-bar {
+                    width: 100%;
+                    height: 20px;
+                    background: rgba(255,255,255,0.2);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 20px;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .loading-progress {
+                    height: 100%;
+                    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+                    width: 0%;
+                    transition: width 0.3s ease;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .loading-text {
+                    font-size: 16px;
+                    margin: 0;
+                    opacity: 0.9;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        loadingScreen.style.display = 'flex';
+    }
+    
+    /**
+     * 隐藏加载界面
+     */
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+        
+        // 更新开始按钮状态
+        this.updateStartButtonState();
+        
+        // 显示开始界面
+        this.showStartScreen();
+    }
+    
+    /**
+     * 更新加载进度
+     */
+    updateLoadingProgress() {
+        const progressBar = document.getElementById('loadingProgress');
+        const loadingText = document.getElementById('loadingText');
+        
+        if (progressBar && loadingText) {
+            const progress = Math.round(this.audioManager.loadingProgress);
+            progressBar.style.width = progress + '%';
+            loadingText.textContent = `正在加载音频资源... ${progress}%`;
+            
+            // 添加一些有趣的加载文本
+            if (progress >= 100) {
+                loadingText.textContent = '🎉 加载完成！准备开始游戏...';
+            } else if (progress >= 75) {
+                loadingText.textContent = `⚡ 即将完成... ${progress}%`;
+            } else if (progress >= 50) {
+                loadingText.textContent = `🎵 加载音频中... ${progress}%`;
+            } else {
+                loadingText.textContent = `🔄 正在加载音频资源... ${progress}%`;
+            }
+        }
     }
     
     /**
@@ -2038,6 +2236,12 @@ class GameEngine {
      * 开始游戏
      */
     startGame() {
+        // 检查音频资源是否还在加载中
+        if (this.audioManager.isLoading) {
+            console.log('音频资源还在加载中，请稍候...');
+            return;
+        }
+        
         document.getElementById('startScreen').classList.add('hidden');
         this.gameState = 'playing';
         
@@ -2113,7 +2317,11 @@ class GameEngine {
         }
         
         // 检查Boss生成条件
-        if (this.player.level >= 10 && !this.bossSpawned && this.enemies.length === 0) {
+        if (this.player.level >= 10 && !this.bossSpawned) {
+            // 清除所有普通敌人
+            this.enemies = this.enemies.filter(enemy => enemy instanceof Boss);
+            
+            // 生成Boss
             this.spawnBoss();
             this.bossSpawned = true;
         }
@@ -2121,8 +2329,10 @@ class GameEngine {
         // 生成武器
         this.spawnWeapons(deltaTime);
         
-        // 生成敌人
-        this.spawnEnemies(deltaTime);
+        // 只有在Boss未生成时才生成普通敌人
+        if (!this.bossSpawned) {
+            this.spawnEnemies(deltaTime);
+        }
         
         // 生成宝箱
         this.spawnTreasureBoxes(deltaTime);
@@ -2670,18 +2880,27 @@ class GameEngine {
         switch (skill.id) {
             case 'weaponUpgrade':
                 // 刀升级：提升武器等级
+                const oldGlobalLevel = this.currentWeaponLevel;
                 if (this.currentWeaponLevel < 10) {
                     this.currentWeaponLevel++;
-                    console.log(`全局武器等级提升到: ${this.currentWeaponLevel}`);
+                    console.log(`⚔️ 全局武器升级: ${oldGlobalLevel} → ${this.currentWeaponLevel}`);
+                    console.log(`📊 当前场上武器数量: ${this.weapons.length}`);
                     
                     // 使用新的updateWeaponLevel方法更新所有现有武器
-                    this.weapons.forEach(weapon => {
+                    this.weapons.forEach((weapon, index) => {
+                        console.log(`🔄 更新第${index + 1}把武器...`);
                         weapon.updateWeaponLevel(this.currentWeaponLevel);
                     });
                     
                     // 显示升级提示信息
                     const weaponType = GameConfig.weapons.types[this.currentWeaponLevel - 1];
-                    console.log(`所有武器已升级为: ${weaponType.name}`);
+                    if (weaponType) {
+                        console.log(`✅ 所有武器已升级为: ${weaponType.name}`);
+                    } else {
+                        console.error(`❌ 武器类型获取失败，等级: ${this.currentWeaponLevel}`);
+                    }
+                } else {
+                    console.log(`⚠️ 武器已达到最高等级 (${this.currentWeaponLevel})，无法继续升级`);
                 }
                 break;
             case 'weaponCount':
@@ -2794,27 +3013,114 @@ class GameEngine {
     }
     
     /**
-     * 初始化音频系统
+     * 预加载音频资源
      */
-    initAudio() {
+    async preloadAudioResources() {
+        this.audioManager.isLoading = true;
+        this.audioManager.loadedResources = 0;
+        this.audioManager.loadingProgress = 0;
+        
+        // 显示加载提示
+        this.showLoadingScreen();
+        
         try {
-            // 初始化背景音乐
-            this.audioManager.bgm = new Audio();
-            this.audioManager.bgm.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/bgm.mp3';
-            this.audioManager.bgm.loop = true;
-            this.audioManager.bgm.volume = this.audioManager.volume * 0.3; // 背景音乐音量较低
-            this.audioManager.bgm.preload = 'auto';
+            // 创建音频加载Promise数组
+            const loadPromises = [];
             
-            // 初始化攻击音效
-            this.audioManager.attackSound = new Audio();
-            this.audioManager.attackSound.src = 'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/sword.mp3';
-            this.audioManager.attackSound.volume = this.audioManager.volume;
-            this.audioManager.attackSound.preload = 'auto';
+            // 预加载背景音乐
+            const bgmPromise = this.loadAudioResource(
+                'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/bgm.mp3',
+                'bgm'
+            );
+            loadPromises.push(bgmPromise);
             
-            console.log('音频系统初始化成功');
+            // 预加载攻击音效
+            const attackPromise = this.loadAudioResource(
+                'https://raw.githubusercontent.com/coder-pig/vault_pic/master/knife_turning/sword.mp3',
+                'attackSound'
+            );
+            loadPromises.push(attackPromise);
+            
+            // 等待所有音频资源加载完成
+            await Promise.all(loadPromises);
+            
+            this.audioManager.isLoading = false;
+            this.audioManager.loadingProgress = 100;
+            
+            console.log('所有音频资源预加载完成');
+            
+            // 隐藏加载界面，显示开始界面
+            this.hideLoadingScreen();
+            
         } catch (error) {
-            console.warn('音频系统初始化失败:', error);
+            console.warn('音频资源预加载失败:', error);
+            this.audioManager.isLoading = false;
+            
+            // 即使加载失败也要显示开始界面
+            this.hideLoadingScreen();
         }
+    }
+    
+    /**
+     * 加载单个音频资源
+     * @param {string} url - 音频文件URL
+     * @param {string} type - 音频类型 ('bgm' 或 'attackSound')
+     * @returns {Promise} 加载Promise
+     */
+    loadAudioResource(url, type) {
+        return new Promise((resolve, reject) => {
+            const audio = new Audio();
+            audio.crossOrigin = 'anonymous';
+            
+            // 音频加载成功回调
+            audio.addEventListener('canplaythrough', () => {
+                // 配置音频属性
+                if (type === 'bgm') {
+                    audio.loop = true;
+                    audio.volume = this.audioManager.volume * 0.3;
+                    this.audioManager.bgm = audio;
+                } else if (type === 'attackSound') {
+                    audio.volume = this.audioManager.volume;
+                    this.audioManager.attackSound = audio;
+                }
+                
+                // 更新加载进度
+                this.audioManager.loadedResources++;
+                this.audioManager.loadingProgress = 
+                    (this.audioManager.loadedResources / this.audioManager.totalResources) * 100;
+                
+                this.updateLoadingProgress();
+                
+                console.log(`音频资源 ${type} 加载完成`);
+                resolve(audio);
+            });
+            
+            // 音频加载失败回调
+            audio.addEventListener('error', (error) => {
+                console.warn(`音频资源 ${type} 加载失败:`, error);
+                
+                // 即使失败也要更新进度
+                this.audioManager.loadedResources++;
+                this.audioManager.loadingProgress = 
+                    (this.audioManager.loadedResources / this.audioManager.totalResources) * 100;
+                
+                this.updateLoadingProgress();
+                
+                // 创建空的音频对象作为备用
+                if (type === 'bgm') {
+                    this.audioManager.bgm = new Audio();
+                } else if (type === 'attackSound') {
+                    this.audioManager.attackSound = new Audio();
+                }
+                
+                resolve(null); // 不reject，让游戏继续运行
+            });
+            
+            // 开始加载
+            audio.src = url;
+            audio.preload = 'auto';
+            audio.load();
+        });
     }
     
     /**
