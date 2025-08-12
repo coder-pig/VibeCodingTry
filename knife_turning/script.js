@@ -103,30 +103,22 @@ class DeviceDetector {
  */
 class CanvasAdapter {
     /**
-     * 调整画布尺寸
+     * 调整画布尺寸 - 全屏适配
      * @param {HTMLCanvasElement} canvas - 画布元素
      * @param {boolean} isMobile - 是否为移动设备
      */
     static resizeCanvas(canvas, isMobile) {
-        if (isMobile) {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const aspectRatio = GameConfig.canvas.mobile.aspectRatio;
-            
-            let canvasWidth = screenWidth * 0.95;
-            let canvasHeight = canvasWidth / aspectRatio;
-            
-            if (canvasHeight > screenHeight * 0.7) {
-                canvasHeight = screenHeight * 0.7;
-                canvasWidth = canvasHeight * aspectRatio;
-            }
-            
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-        } else {
-            canvas.width = GameConfig.canvas.desktop.width;
-            canvas.height = GameConfig.canvas.desktop.height;
-        }
+        // 获取屏幕实际尺寸
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        
+        // 设置画布为全屏尺寸
+        canvas.width = screenWidth;
+        canvas.height = screenHeight;
+        
+        // 设置画布样式也为全屏
+        canvas.style.width = screenWidth + 'px';
+        canvas.style.height = screenHeight + 'px';
     }
 }
 
@@ -1430,7 +1422,7 @@ class Boss extends Enemy {
     constructor(x, y) {
         // Boss配置：高血量、高伤害、中等速度
         const bossType = {
-            health: 1000,
+            health: 20000,
             damage: 20,
             speed: 40,
             exp: 500,
@@ -1492,7 +1484,7 @@ class Boss extends Enemy {
         }
         
         if (this.isCharging) {
-            this.updateCharge(deltaTime);
+            this.updateCharge(deltaTime, player);
         } else {
             // 普通AI移动
             super.update(deltaTime, player);
@@ -1519,8 +1511,9 @@ class Boss extends Enemy {
     /**
      * 更新冲刺状态
      * @param {number} deltaTime - 时间间隔
+     * @param {Player} player - 玩家对象
      */
-    updateCharge(deltaTime) {
+    updateCharge(deltaTime, player) {
         this.chargeDuration += deltaTime * 1000;
         
         if (this.chargeDuration < this.maxChargeDuration) {
@@ -1528,13 +1521,14 @@ class Boss extends Enemy {
             this.velocity.x = this.chargeDirection.x * this.chargeSpeed;
             this.velocity.y = this.chargeDirection.y * this.chargeSpeed;
         } else {
-            // 冲刺结束
+            // 冲刺结束，恢复正常移动
             this.isCharging = false;
             this.velocity.x = 0;
             this.velocity.y = 0;
         }
         
-        super.update(deltaTime, null); // 不使用普通AI
+        // 使用GameObject的基础update方法更新位置，避免Enemy的AI逻辑干扰冲刺
+        GameObject.prototype.update.call(this, deltaTime);
     }
     
     /**
@@ -1986,6 +1980,7 @@ class GameEngine {
         this.gameState = 'start'; // 'start', 'playing', 'paused', 'levelUp', 'gameOver', 'victory'
         this.lastTime = 0;
         this.gameTime = 0;
+        this.isSelectingSkill = false; // 防止重复选择技能的标志位
         
         // 游戏对象
         this.player = null;
@@ -2067,9 +2062,14 @@ class GameEngine {
             this.restartGame();
         });
         
-        // 技能选择
+        // 技能选择 - 移除旧的事件监听器，避免重复绑定
         document.querySelectorAll('.skill-card').forEach((card, index) => {
-            card.addEventListener('click', () => {
+            // 移除可能存在的旧事件监听器
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            
+            // 为新卡片添加事件监听器
+            newCard.addEventListener('click', () => {
                 this.selectSkill(index);
             });
         });
@@ -2824,8 +2824,15 @@ class GameEngine {
     showLevelUpModal() {
         this.gameState = 'levelUp';
         
-        // 从5种成长技能中随机选择3个
-        const availableSkills = [...GameConfig.growthSkills];
+        // 从5种成长技能中随机选择3个，但需要过滤掉满级的技能
+        let availableSkills = [...GameConfig.growthSkills];
+        
+        // 如果刀具等级已达到10级，移除"刀升级"选项
+        if (this.currentWeaponLevel >= 10) {
+            availableSkills = availableSkills.filter(skill => skill.id !== 'weaponUpgrade');
+            console.log('🚫 刀具已达到最高等级，移除"刀升级"选项');
+        }
+        
         const selectedSkills = [];
         
         for (let i = 0; i < 3 && availableSkills.length > 0; i++) {
@@ -2860,16 +2867,34 @@ class GameEngine {
      * @param {number} index - 技能索引
      */
     selectSkill(index) {
+        // 防重复点击保护机制
+        if (this.gameState !== 'levelUp') {
+            console.log('⚠️ 技能选择被阻止：游戏状态不是levelUp');
+            return;
+        }
+        
+        // 添加处理中状态，防止重复点击
+        if (this.isSelectingSkill) {
+            console.log('⚠️ 技能选择被阻止：正在处理中');
+            return;
+        }
+        
+        this.isSelectingSkill = true;
+        
         const skillCard = document.querySelectorAll('.skill-card')[index];
         const skillId = skillCard.dataset.skillId;
         const skill = GameConfig.growthSkills.find(s => s.id === skillId);
         
         if (skill) {
+            console.log(`🎯 选择技能: ${skill.name}`);
             this.applySkill(skill);
         }
         
         document.getElementById('skillModal').classList.add('hidden');
         this.gameState = 'playing';
+        
+        // 重置选择状态
+        this.isSelectingSkill = false;
     }
     
     /**
@@ -2962,25 +2987,13 @@ class GameEngine {
     /**
      * 更新UI显示
      */
+    /**
+     * 更新UI界面
+     * 现在状态信息直接绘制在画布上，不需要更新HTML元素
+     */
     updateUI() {
-        if (!this.player) return;
-        
-        // 更新血量条
-        const healthPercent = (this.player.health / this.player.maxHealth) * 100;
-        document.getElementById('healthBar').style.width = `${healthPercent}%`;
-        document.getElementById('healthText').textContent = `${this.player.health}/${this.player.maxHealth}`;
-        
-        // 更新经验条
-        const requiredExp = this.player.getRequiredExperience();
-        const expPercent = (this.player.experience / requiredExp) * 100;
-        document.getElementById('expBar').style.width = `${expPercent}%`;
-        document.getElementById('expText').textContent = `${this.player.experience}/${requiredExp}`;
-        
-        // 更新等级
-        document.getElementById('levelText').textContent = this.player.level;
-        
-        // 更新武器数量
-        document.getElementById('weaponCount').textContent = this.weapons.length;
+        // 状态信息现在通过renderStatusInfo方法直接绘制在画布上
+        // 不再需要更新HTML元素
     }
     
     /**
@@ -3010,6 +3023,66 @@ class GameEngine {
         
         // 渲染武器
         this.weapons.forEach(weapon => weapon.render(this.ctx));
+        
+        // 渲染状态信息到画布左上角
+        this.renderStatusInfo();
+    }
+    
+    /**
+     * 渲染状态信息到画布左上角
+     * 直接在画布上绘制状态信息，不使用HTML标签
+     */
+    renderStatusInfo() {
+        if (!this.player) return;
+        
+        this.ctx.save();
+        
+        // 设置文字样式
+        this.ctx.font = 'bold 16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'top';
+        
+        // 设置文字颜色和描边
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 2;
+        
+        const startX = 10; // 左边距
+        const startY = 10; // 上边距
+        const lineHeight = 22; // 行高
+        let currentY = startY;
+        
+        // 绘制血量信息
+        const healthText = `血量: ${this.player.health}/${this.player.maxHealth}`;
+        this.ctx.strokeText(healthText, startX, currentY);
+        this.ctx.fillText(healthText, startX, currentY);
+        currentY += lineHeight;
+        
+        // 绘制经验信息
+        const requiredExp = this.player.getRequiredExperience();
+        const expText = `经验: ${this.player.experience}/${requiredExp}`;
+        this.ctx.strokeText(expText, startX, currentY);
+        this.ctx.fillText(expText, startX, currentY);
+        currentY += lineHeight;
+        
+        // 绘制等级信息
+        const levelText = `等级: ${this.player.level}`;
+        this.ctx.strokeText(levelText, startX, currentY);
+        this.ctx.fillText(levelText, startX, currentY);
+        currentY += lineHeight;
+        
+        // 绘制武器数量
+        const weaponCountText = `刀具: ${this.weapons.length}`;
+        this.ctx.strokeText(weaponCountText, startX, currentY);
+        this.ctx.fillText(weaponCountText, startX, currentY);
+        currentY += lineHeight;
+        
+        // 绘制刀具等级
+        const weaponLevelText = `等级: ${this.currentWeaponLevel}`;
+        this.ctx.strokeText(weaponLevelText, startX, currentY);
+        this.ctx.fillText(weaponLevelText, startX, currentY);
+        
+        this.ctx.restore();
     }
     
     /**

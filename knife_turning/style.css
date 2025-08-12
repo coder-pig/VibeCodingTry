@@ -29,96 +29,15 @@ body {
     justify-content: center;
 }
 
-/* 游戏画布 */
+/* 游戏画布 - 全屏显示 */
 #gameCanvas {
-    border: 3px solid #ffd700;
-    border-radius: 10px;
     background: #2d5016;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-    max-width: 95vw;
-    max-height: 85vh;
-    width: 375px;
-    height: 667px;
+    width: 100vw;
+    height: 100vh;
+    display: block;
 }
 
-/* 游戏UI界面 */
-#gameUI {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 100;
-    width: auto;
-    max-width: 150px;
-}
-
-.ui-top {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 8px;
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
-}
-
-/* 血量条和经验条样式 */
-.health-bar, .exp-bar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-    max-width: 130px;
-}
-
-.bar-label {
-    font-weight: bold;
-    font-size: 10px;
-    color: #ffd700;
-    min-width: 25px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.bar-container {
-    width: 70px;
-    height: 14px;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid #ffd700;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-}
-
-.bar {
-    height: 100%;
-    transition: width 0.3s ease;
-    border-radius: 8px;
-}
-
-.bar.health {
-    background: linear-gradient(90deg, #ff4444, #ff6666);
-    width: 100%;
-}
-
-.bar.experience {
-    background: linear-gradient(90deg, #4444ff, #6666ff);
-    width: 0%;
-}
-
-/* 等级和武器计数显示 */
-.level-display, .weapon-count {
-    font-weight: bold;
-    font-size: 11px;
-    color: #ffd700;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 3px 6px;
-    border-radius: 8px;
-    border: 1px solid #ffd700;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    width: 100%;
-    max-width: 130px;
-    text-align: center;
-}
+/* 移除了游戏UI界面相关样式，因为现在使用画布绘制状态信息 */
 
 /* 虚拟摇杆样式 (移动端和桌面端测试) */
 .joystick-container {
