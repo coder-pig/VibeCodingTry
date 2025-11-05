@@ -29,12 +29,35 @@ body {
     justify-content: center;
 }
 
-/* 游戏画布 - 全屏显示 */
+/* 游戏画布 - 响应式设计 */
 #gameCanvas {
     background: #2d5016;
-    width: 100vw;
-    height: 100vh;
     display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* 移动端 - 画布占满屏幕 */
+@media (max-width: 768px) {
+    #gameCanvas {
+        width: 100vw;
+        height: 100vh;
+    }
+}
+
+/* PC端 - 画布居中显示，保持9:16比例 */
+@media (min-width: 769px) {
+    #gameContainer {
+        padding: 20px;
+    }
+    
+    #gameCanvas {
+        width: min(90vw, calc(90vh * 9 / 16));
+        height: min(90vh, calc(90vw * 16 / 9));
+        border: 2px solid #ffd700;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
 }
 
 /* 移除了游戏UI界面相关样式，因为现在使用画布绘制状态信息 */

@@ -103,22 +103,29 @@ class DeviceDetector {
  */
 class CanvasAdapter {
     /**
-     * 调整画布尺寸 - 全屏适配
+     * 调整画布尺寸 - 响应式适配
      * @param {HTMLCanvasElement} canvas - 画布元素
      * @param {boolean} isMobile - 是否为移动设备
      */
     static resizeCanvas(canvas, isMobile) {
-        // 获取屏幕实际尺寸
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
+        // 获取画布的实际显示尺寸（由CSS控制）
+        const rect = canvas.getBoundingClientRect();
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
         
-        // 设置画布为全屏尺寸
-        canvas.width = screenWidth;
-        canvas.height = screenHeight;
+        // 设置画布内部分辨率匹配显示尺寸
+        // 使用devicePixelRatio确保高DPI屏幕的清晰度
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
         
-        // 设置画布样式也为全屏
-        canvas.style.width = screenWidth + 'px';
-        canvas.style.height = screenHeight + 'px';
+        // 获取2D上下文并设置缩放以匹配设备像素比
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        
+        // 确保画布样式尺寸与CSS设置一致
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
     }
 }
 
@@ -2040,6 +2047,8 @@ class GameEngine {
         // 监听窗口大小变化
         window.addEventListener('resize', () => {
             CanvasAdapter.resizeCanvas(this.canvas, this.isMobile);
+            // 重新获取上下文引用，因为resizeCanvas中可能重新设置了缩放
+            this.ctx = this.canvas.getContext('2d');
             // 重新设置图像渲染质量，确保窗口调整后依然保持清晰
             this.ctx.imageSmoothingEnabled = false;
             if (this.ctx.imageSmoothingQuality) {
